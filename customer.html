@@ -47,24 +47,10 @@
         <label>💰 Offer Price</label>
         <div class="input-row">
           <span style="color: #6b7280; margin-right: 8px; font-weight: 600;">$</span>
-          <input type="number" id="price" placeholder="Enter amount" value="12.50" min="2" step="0.25" style="border: 0; outline: 0; background: transparent; width: 100%; padding: 15px 10px; font-weight: 600; font-size: 1.1rem;">
+          <input type="number" id="price" placeholder="Enter amount" value="12.50" min="2" step="0.25" style="border: 0; outline: 0; background: transparent; width: 100%; padding: 15px 10px; font-size: 1rem;">
         </div>
 
-        <label>💳 Payment Method</label>
-        <div style="display: flex; gap: 8px; margin-top: 12px;">
-          <button class="ride-option selected" onclick="selectPayment(this, 'cashapp')" style="flex: 1; padding: 12px;">
-            <span>💵</span>
-            <small>CashApp</small>
-          </button>
-          <button class="ride-option" onclick="selectPayment(this, 'paypal')" style="flex: 1; padding: 12px;">
-            <span>🅿️</span>
-            <small>PayPal</small>
-          </button>
-          <button class="ride-option" onclick="selectPayment(this, 'venmo')" style="flex: 1; padding: 12px;">
-            <span>📱</span>
-            <small>Venmo</small>
-          </button>
-        </div>
+        <label>💳 Payment Method: CashApp</label>
 
         <label id="paymentLinkLabel">CashApp Tag</label>
         <div class="input-row">
@@ -79,7 +65,7 @@
   </div>
 
   <!-- Navigation -->
-  <div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; gap: 20px; padding: 12px; max-width: 520px; margin: 0 auto;">
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; gap: 20px; padding: 12px; max-width: 520px; margin: 0 auto; left: 50%; transform: translateX(-50%);">
     <button onclick="goToPage('customer.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 1;">👤</button>
     <button onclick="goToPage('rider.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">🚗</button>
     <button onclick="goToPage('admin.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">⚙️</button>
@@ -87,28 +73,6 @@
 
   <script>
     let selectedPayment = 'cashapp';
-
-    function selectPayment(btn, type) {
-      document.querySelectorAll('.ride-option').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedPayment = type;
-      
-      const labels = {
-        'cashapp': 'CashApp Tag',
-        'paypal': 'PayPal Email',
-        'venmo': 'Venmo Username'
-      };
-      
-      const placeholders = {
-        'cashapp': 'Enter your CashApp tag (e.g., $johndoe)',
-        'paypal': 'Enter your PayPal email',
-        'venmo': 'Enter your Venmo username'
-      };
-      
-      document.getElementById('paymentLinkLabel').textContent = labels[type];
-      document.getElementById('paymentLink').placeholder = placeholders[type];
-      document.getElementById('paymentLink').value = '';
-    }
 
     function requestRide() {
       const pickup = document.getElementById('pickup').value;
