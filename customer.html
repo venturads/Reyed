@@ -45,14 +45,10 @@
         </div>
 
         <label>Ride Type</label>
-        <div class="ride-options">
+        <div class="ride-options" style="grid-template-columns: repeat(2, 1fr);">
           <button class="ride-option selected" onclick="selectRide(this, 'eco')">
             <span>🟢</span>
             <small>Eco</small>
-          </button>
-          <button class="ride-option" onclick="selectRide(this, 'comfort')">
-            <span>⭐</span>
-            <small>Comfort</small>
           </button>
           <button class="ride-option" onclick="selectRide(this, 'premium')">
             <span>👑</span>
@@ -73,7 +69,7 @@
 
         <button class="primary-btn" onclick="requestRide()">Request Ride Now</button>
         <button class="secondary-btn" onclick="viewScheduled()">Schedule for Later</button>
-        <p class="helper">💳 Payment • 4242 •••• 4242</p>
+        <p class="helper">💳 Payment • 4242 ••••• 4242</p>
       </div>
     </main>
   </div>
@@ -89,7 +85,7 @@
     function selectRide(btn, type) {
       document.querySelectorAll('.ride-option').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      const prices = { eco: '$12.50', comfort: '$18.75', premium: '$28.00' };
+      const prices = { eco: '$12.50', premium: '$28.00' };
       document.getElementById('price').textContent = prices[type];
     }
 
