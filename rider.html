@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reyed - Rider (Driver)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <p class="eyebrow">Reyed Driver</p>
+        <h1>Your Status</h1>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="icon-btn" onclick="goHome()">🏠</button>
+        <button class="icon-btn" onclick="toggleDriverSettings()">⚙️</button>
+      </div>
+    </div>
+
+    <main>
+      <!-- Status Card -->
+      <div class="map-card">
+        <div class="map-grid"></div>
+        <div class="road road-one"></div>
+        <div class="road road-two"></div>
+        <div class="car" style="font-size: 40px;">🚗</div>
+        <div class="map-label">You are here</div>
+      </div>
+
+      <!-- Driver Info Panel -->
+      <div class="panel">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <div class="driver-avatar">J</div>
+          <div>
+            <strong>Jordan Davis</strong>
+            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">⭐ 4.9 (1,240 rides)</p>
+            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">🚗 2022 Black Toyota Camry</p>
+          </div>
+        </div>
+
+        <label>Online Status</label>
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
+          <button class="ride-option selected" onclick="setStatus(this, 'online')" style="flex: 1;">
+            <span>🟢</span>
+            <small>Online</small>
+          </button>
+          <button class="ride-option" onclick="setStatus(this, 'break')" style="flex: 1;">
+            <span>🟡</span>
+            <small>On Break</small>
+          </button>
+          <button class="ride-option" onclick="setStatus(this, 'offline')" style="flex: 1;">
+            <span>⚫</span>
+            <small>Offline</small>
+          </button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 12px; background: #f0fdf4; border-radius: 12px; border-left: 4px solid #16a34a;">
+          <strong style="color: #166534;">Today's Earnings</strong>
+          <p style="margin: 5px 0; color: #16a34a; font-size: 1.3rem; font-weight: bold;">$247.50</p>
+          <p style="margin: 5px 0; color: #6b7280; font-size: .84rem;">12 rides • 3.5 hours online</p>
+        </div>
+
+        <label style="margin-top: 20px;">Active Ride Requests</label>
+        <div id="rideRequests" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+          <!-- Ride requests will appear here -->
+          <div style="padding: 12px; background: #fef3c7; border-radius: 12px; border-left: 4px solid #fbbf24;">
+            <strong>📍 142 Oak Street</strong>
+            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">→ 856 Pine Avenue</p>
+            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">🚶 2.3 km away • $15.50</p>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button style="flex: 1; padding: 8px; background: #16a34a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;" onclick="acceptRide()">Accept</button>
+              <button style="flex: 1; padding: 8px; background: #e5e7eb; color: #111; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;" onclick="rejectRide()">Decline</button>
+            </div>
+          </div>
+        </div>
+
+        <label style="margin-top: 20px;">Trip History</label>
+        <div class="history-list">
+          <div class="history-item">
+            <strong>Sarah Johnson</strong>
+            <p>📍 123 Main St → 456 Oak Ave</p>
+            <p>⭐ 5.0 | 💰 $18.50 | ⏱️ 12 min</p>
+          </div>
+          <div class="history-item">
+            <strong>Michael Chen</strong>
+            <p>📍 Downtown Center → Airport</p>
+            <p>⭐ 5.0 | 💰 $42.00 | ⏱️ 28 min</p>
+          </div>
+          <div class="history-item">
+            <strong>Emma Wilson</strong>
+            <p>📍 Park Plaza → Shopping District</p>
+            <p>⭐ 4.8 | 💰 $12.75 | ⏱️ 8 min</p>
+          </div>
+        </div>
+
+        <button class="primary-btn" onclick="endShift()">End Shift</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Navigation -->
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; gap: 20px; padding: 12px; max-width: 520px; margin: 0 auto;">
+    <button onclick="goToPage('customer.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">👤</button>
+    <button onclick="goToPage('rider.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 1;">🚗</button>
+    <button onclick="goToPage('admin.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">⚙️</button>
+  </div>
+
+  <script>
+    function setStatus(btn, status) {
+      document.querySelectorAll('.ride-option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const msgs = { online: '🟢 You are now online', break: '🟡 Break mode activated', offline: '⚫ You are now offline' };
+      showToast(msgs[status]);
+    }
+
+    function acceptRide() {
+      showToast('✅ Ride accepted! Heading to pickup...');
+      setTimeout(() => {
+        window.location.href = 'driver-tracking.html';
+      }, 1500);
+    }
+
+    function rejectRide() {
+      showToast('❌ Ride declined');
+    }
+
+    function endShift() {
+      if (confirm('Are you sure you want to end your shift?')) {
+        showToast('✋ Shift ended. See you tomorrow!');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
+      }
+    }
+
+    function toggleDriverSettings() {
+      showToast('Settings: Language, Payment, Documents');
+    }
+
+    function goToPage(page) {
+      window.location.href = page;
+    }
+
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+  </script>
+</body>
+</html>

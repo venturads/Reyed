@@ -1,1 +1,113 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RideQuote</title><link rel="stylesheet" href="styles.css"></head><body><div class="shell"><header><h1>RideQuote</h1><button id="reset">Reset</button></header><nav><button data-v="rider" class="active">Rider</button><button data-v="driver">Driver</button><button data-v="admin">Admin</button></nav><section id="rider" class="view active"><div class="card"><h2>Request a ride</h2><input id="rn" placeholder="Name"><input id="rp" placeholder="Phone"><input id="pu" placeholder="Pickup"><input id="ds" placeholder="Destination"><textarea id="nt" placeholder="Notes"></textarea><button id="post">Post request</button></div><div id="rideCard" class="card"></div><div class="card"><h2>Driver quotes</h2><div id="quotes"></div></div></section><section id="driver" class="view"><div class="card"><h2>Driver portal</h2><select id="driverSel"></select><div id="driverInfo"></div></div><div class="card"><div id="trip"></div><input id="amt" type="number" placeholder="Quote amount"><input id="eta" placeholder="Pickup time"><textarea id="msg" placeholder="Message"></textarea><button id="send">Send quote</button></div><div id="accepted" class="card"></div></section><section id="admin" class="view"><div class="card"><h2>Add driver</h2><input id="an" placeholder="Name"><input id="ap" placeholder="Phone"><input id="av" placeholder="Vehicle"><input id="al" placeholder="Plate"><input id="apay" placeholder="Payment"><button id="add">Add driver</button></div><div class="card"><h2>Drivers</h2><div id="drivers"></div></div><div class="card"><h2>History</h2><div id="history"></div></div></section></div><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reyed - Home</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .landing-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 24px;
+      padding: 20px;
+      text-align: center;
+    }
+    .landing-hero h1 {
+      font-size: 3rem;
+      margin: 0;
+      background: linear-gradient(135deg, #111, #666);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .landing-hero p {
+      font-size: 1.1rem;
+      color: #6b7280;
+      margin: 0;
+      max-width: 300px;
+    }
+    .role-buttons {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      width: 100%;
+      max-width: 300px;
+    }
+    .role-btn {
+      padding: 16px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all .3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .role-btn:hover {
+      border-color: #111;
+      background: #f3f4f6;
+      transform: translateY(-2px);
+    }
+    .role-btn-primary {
+      background: #111;
+      color: white;
+      border-color: #111;
+    }
+    .role-btn-primary:hover {
+      background: #333;
+      border-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="landing-hero">
+    <div style="font-size: 4rem; margin: 20px 0;">🚗</div>
+    <h1>Reyed</h1>
+    <p>Your multi-sided ride-sharing platform</p>
+    
+    <div class="role-buttons">
+      <button class="role-btn role-btn-primary" onclick="goToRole('customer')">
+        <span>👤</span>
+        <span>Request Ride</span>
+      </button>
+      <button class="role-btn" onclick="goToRole('rider')">
+        <span>🚗</span>
+        <span>Drive & Earn</span>
+      </button>
+      <button class="role-btn" onclick="goToRole('admin')">
+        <span>⚙️</span>
+        <span>Admin Dashboard</span>
+      </button>
+    </div>
+
+    <div style="margin-top: 40px; padding: 16px; background: #f3f4f6; border-radius: 16px; max-width: 300px;">
+      <h3 style="margin: 0 0 12px; font-size: 1rem;">✨ Features</h3>
+      <ul style="margin: 0; padding: 0 0 0 20px; text-align: left; color: #6b7280; font-size: .9rem; line-height: 1.6;">
+        <li>Real-time tracking</li>
+        <li>Multiple ride types</li>
+        <li>Secure payments</li>
+        <li>Driver analytics</li>
+        <li>Admin controls</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function goToRole(role) {
+      const pages = {
+        'customer': 'customer.html',
+        'rider': 'rider.html',
+        'admin': 'admin.html'
+      };
+      window.location.href = pages[role];
+    }
+  </script>
+</body>
+</html>
