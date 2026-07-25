@@ -50,14 +50,6 @@
           <input type="number" id="price" placeholder="Enter amount" value="12.50" min="2" step="0.25" style="border: 0; outline: 0; background: transparent; width: 100%; padding: 15px 10px; font-size: 1rem;">
         </div>
 
-        <label>💳 Payment Method: CashApp</label>
-
-        <label id="paymentLinkLabel">CashApp Tag</label>
-        <div class="input-row">
-          <span style="color: #6b7280; margin-right: 8px; font-weight: 600;">$</span>
-          <input type="text" id="paymentLink" placeholder="Enter your CashApp tag (e.g., $johndoe)" value="">
-        </div>
-
         <button class="primary-btn" onclick="requestRide()">Request Ride Now</button>
         <button class="secondary-btn" onclick="viewScheduled()">Schedule for Later</button>
       </div>
@@ -72,13 +64,10 @@
   </div>
 
   <script>
-    let selectedPayment = 'cashapp';
-
     function requestRide() {
       const pickup = document.getElementById('pickup').value;
       const destination = document.getElementById('destination').value;
       const price = document.getElementById('price').value;
-      const paymentLink = document.getElementById('paymentLink').value;
 
       if (!pickup || !destination) {
         showToast('❌ Please enter pickup and destination');
@@ -90,17 +79,10 @@
         return;
       }
 
-      if (!paymentLink) {
-        showToast('❌ Please enter your payment method details');
-        return;
-      }
-
       const rideData = {
         pickup,
         destination,
-        price,
-        paymentMethod: selectedPayment,
-        paymentLink
+        price
       };
 
       localStorage.setItem('rideRequest', JSON.stringify(rideData));
