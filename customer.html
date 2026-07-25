@@ -44,32 +44,36 @@
           <input type="text" id="destination" placeholder="Where to?" value="456 Oak Ave, City">
         </div>
 
-        <label>Ride Type</label>
-        <div class="ride-options" style="grid-template-columns: repeat(2, 1fr);">
-          <button class="ride-option selected" onclick="selectRide(this, 'eco')">
-            <span>🟢</span>
-            <small>Eco</small>
+        <label>💰 Offer Price</label>
+        <div class="input-row">
+          <span style="color: #6b7280; margin-right: 8px; font-weight: 600;">$</span>
+          <input type="number" id="price" placeholder="Enter amount" value="12.50" min="2" step="0.25" style="border: 0; outline: 0; background: transparent; width: 100%; padding: 15px 10px; font-weight: 600; font-size: 1.1rem;">
+        </div>
+
+        <label>💳 Payment Method</label>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button class="ride-option selected" onclick="selectPayment(this, 'cashapp')" style="flex: 1; padding: 12px;">
+            <span>💵</span>
+            <small>CashApp</small>
           </button>
-          <button class="ride-option" onclick="selectRide(this, 'premium')">
-            <span>👑</span>
-            <small>Premium</small>
+          <button class="ride-option" onclick="selectPayment(this, 'paypal')" style="flex: 1; padding: 12px;">
+            <span>🅿️</span>
+            <small>PayPal</small>
+          </button>
+          <button class="ride-option" onclick="selectPayment(this, 'venmo')" style="flex: 1; padding: 12px;">
+            <span>📱</span>
+            <small>Venmo</small>
           </button>
         </div>
 
-        <div class="estimate-card">
-          <div>
-            <span>Estimated Price</span>
-            <strong id="price">$12.50</strong>
-          </div>
-          <div>
-            <span>Estimated Time</span>
-            <strong id="time">5-8 min</strong>
-          </div>
+        <label id="paymentLinkLabel">CashApp Tag</label>
+        <div class="input-row">
+          <span style="color: #6b7280; margin-right: 8px; font-weight: 600;">$</span>
+          <input type="text" id="paymentLink" placeholder="Enter your CashApp tag (e.g., $johndoe)" value="">
         </div>
 
         <button class="primary-btn" onclick="requestRide()">Request Ride Now</button>
         <button class="secondary-btn" onclick="viewScheduled()">Schedule for Later</button>
-        <p class="helper">💳 Payment • 4242 ••••• 4242</p>
       </div>
     </main>
   </div>
@@ -82,22 +86,65 @@
   </div>
 
   <script>
-    function selectRide(btn, type) {
+    let selectedPayment = 'cashapp';
+
+    function selectPayment(btn, type) {
       document.querySelectorAll('.ride-option').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      const prices = { eco: '$12.50', premium: '$28.00' };
-      document.getElementById('price').textContent = prices[type];
+      selectedPayment = type;
+      
+      const labels = {
+        'cashapp': 'CashApp Tag',
+        'paypal': 'PayPal Email',
+        'venmo': 'Venmo Username'
+      };
+      
+      const placeholders = {
+        'cashapp': 'Enter your CashApp tag (e.g., $johndoe)',
+        'paypal': 'Enter your PayPal email',
+        'venmo': 'Enter your Venmo username'
+      };
+      
+      document.getElementById('paymentLinkLabel').textContent = labels[type];
+      document.getElementById('paymentLink').placeholder = placeholders[type];
+      document.getElementById('paymentLink').value = '';
     }
 
     function requestRide() {
       const pickup = document.getElementById('pickup').value;
       const destination = document.getElementById('destination').value;
-      if (pickup && destination) {
-        showToast('Searching for nearby drivers...');
-        setTimeout(() => {
-          window.location.href = 'tracking.html';
-        }, 1500);
+      const price = document.getElementById('price').value;
+      const paymentLink = document.getElementById('paymentLink').value;
+
+      if (!pickup || !destination) {
+        showToast('❌ Please enter pickup and destination');
+        return;
       }
+
+      if (!price || parseFloat(price) < 2) {
+        showToast('❌ Minimum ride price is $2.00');
+        return;
+      }
+
+      if (!paymentLink) {
+        showToast('❌ Please enter your payment method details');
+        return;
+      }
+
+      const rideData = {
+        pickup,
+        destination,
+        price,
+        paymentMethod: selectedPayment,
+        paymentLink
+      };
+
+      localStorage.setItem('rideRequest', JSON.stringify(rideData));
+      showToast('✅ Searching for nearby drivers...');
+      
+      setTimeout(() => {
+        window.location.href = 'tracking.html';
+      }, 1500);
     }
 
     function viewScheduled() {
