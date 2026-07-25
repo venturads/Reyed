@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reyed - Tracking</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <style>
+    #map { height: 300px; width: 100%; border-radius: 12px; margin-bottom: 15px; }
+    .map-info { font-size: 0.85rem; color: #6b7280; margin-top: 8px; }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -20,21 +25,13 @@
     </div>
 
     <main>
-      <!-- Map Preview -->
-      <div class="map-card">
-        <div class="map-grid"></div>
-        <div class="road road-one"></div>
-        <div class="road road-two"></div>
-        <div class="pin pickup-pin">📍</div>
-        <div class="pin destination-pin">🚩</div>
-        <div class="car" style="font-size: 40px; animation: pulse 1s infinite;">🚗</div>
-        <div class="map-label">Searching...</div>
-      </div>
+      <!-- Live Map -->
+      <div id="map"></div>
 
       <!-- Tracking Info -->
       <div class="panel">
         <div style="text-align: center; padding: 20px;">
-          <div style="font-size: 48px; margin-bottom: 15px;">🔍</div>
+          <div style="font-size: 48px; margin-bottom: 15px; animation: pulse 1s infinite;">🔍</div>
           <strong style="font-size: 1.2rem;">Finding Available Driver</strong>
           <p style="margin: 10px 0; color: #6b7280;">This may take a few moments...</p>
         </div>
@@ -43,6 +40,7 @@
           <p><strong>Pickup:</strong> <span id="pickupText">123 Main St, City</span></p>
           <p style="margin: 8px 0;"><strong>Destination:</strong> <span id="destText">456 Oak Ave, City</span></p>
           <p style="margin: 8px 0;"><strong>Fare:</strong> <span id="priceText">$12.50</span></p>
+          <p style="margin: 8px 0;"><strong>ETA:</strong> <span id="etaText">Searching...</span></p>
         </div>
 
         <button class="primary-btn" onclick="driverFound()">Simulate Driver Found</button>
@@ -65,8 +63,72 @@
     }
   </style>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script>
-    // Load ride data from localStorage
+    let map;
+    let userMarker, driverMarker;
+    let userLocation = { lat: 40.7128, lng: -74.0060 };
+    let driverLocation = { lat: 40.7580, lng: -73.9855 };
+
+    // Initialize map
+    function initMap() {
+      map = L.map('map').setView([40.7128, -74.0060], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // User location marker
+      userMarker = L.circleMarker([userLocation.lat, userLocation.lng], {
+        radius: 8,
+        fillColor: "#3b82f6",
+        color: "#1e40af",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+      }).addTo(map).bindPopup('📍 Your Location');
+
+      // Driver marker (initially hidden, then appears when found)
+      driverMarker = L.circleMarker([driverLocation.lat, driverLocation.lng], {
+        radius: 10,
+        fillColor: "#10b981",
+        color: "#047857",
+        weight: 2,
+        opacity: 0,
+        fillOpacity: 0
+      }).addTo(map).bindPopup('🚗 Driver');
+
+      // Fit bounds
+      const group = new L.featureGroup([userMarker, driverMarker]);
+      map.fitBounds(group.getBounds().pad(0.1), { maxZoom: 13 });
+    }
+
+    // Simulate driver location updates
+    function updateDriverLocation() {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 0.01;
+      driverLocation.lat = userLocation.lat + Math.cos(angle) * distance;
+      driverLocation.lng = userLocation.lng + Math.sin(angle) * distance;
+      
+      driverMarker.setLatLng([driverLocation.lat, driverLocation.lng]);
+      
+      const dist = calculateDistance(userLocation, driverLocation);
+      document.getElementById('etaText').textContent = Math.ceil(dist * 2) + ' min away';
+    }
+
+    // Haversine formula for distance calculation
+    function calculateDistance(loc1, loc2) {
+      const R = 6371;
+      const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+      const dLng = (loc2.lng - loc1.lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // Load ride data
     window.addEventListener('load', function() {
       const rideData = JSON.parse(localStorage.getItem('rideRequest'));
       if (rideData) {
@@ -74,12 +136,17 @@
         document.getElementById('destText').textContent = rideData.destination;
         document.getElementById('priceText').textContent = '$' + rideData.price;
       }
+      
+      initMap();
+      updateDriverLocation();
+      setInterval(updateDriverLocation, 3000);
     });
 
     function driverFound() {
       showToast('✅ Driver found! Alex is 5 minutes away');
+      driverMarker.setOpacity(1).setFillOpacity(0.8);
       setTimeout(() => {
-        window.location.href = 'rider.html';
+        window.location.href = 'driver-found.html';
       }, 2000);
     }
 
