@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reyed - Active Ride</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <style>
+    #map { height: 300px; width: 100%; border-radius: 12px; margin-bottom: 15px; }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -20,16 +24,8 @@
     </div>
 
     <main>
-      <!-- Map Preview -->
-      <div class="map-card">
-        <div class="map-grid"></div>
-        <div class="road road-one"></div>
-        <div class="road road-two"></div>
-        <div class="pin pickup-pin">📍</div>
-        <div class="pin destination-pin">🚩</div>
-        <div class="car" style="font-size: 40px; animation: pulse 1s infinite;">🚗</div>
-        <div class="map-label">In Transit...</div>
-      </div>
+      <!-- Live Map -->
+      <div id="map"></div>
 
       <!-- Active Ride Info -->
       <div class="panel">
@@ -44,19 +40,17 @@
           </div>
         </div>
 
-        <div style="padding: 15px; background: #f3f4f6; border-radius: 12px; margin-bottom: 15px;">
+        <div style="padding: 15px; background: #dbeafe; border-radius: 12px; margin-bottom: 15px;">
           <p style="margin: 0 0 8px;"><strong>📍 From:</strong></p>
-          <p style="margin: 0 0 12px; color: #6b7280;" id="pickupText">123 Main St, City</p>
+          <p style="margin: 0 0 12px; color: #1e40af;" id="pickupText">123 Main St, City</p>
           
           <p style="margin: 0 0 8px;"><strong>🚩 To:</strong></p>
-          <p style="margin: 0 0 12px; color: #6b7280;" id="destText">456 Oak Ave, City</p>
+          <p style="margin: 0 0 12px; color: #1e40af;" id="destText">456 Oak Ave, City</p>
           
           <p style="margin: 0 0 8px;"><strong>💰 Fare:</strong></p>
-          <p style="margin: 0; color: #16a34a; font-size: 1.2rem; font-weight: bold;" id="priceText">$12.50</p>
-        </div>
-
-        <div style="padding: 12px; background: #dbeafe; border-radius: 12px; border-left: 4px solid #2563eb; margin-bottom: 15px;">
-          <strong style="color: #1e40af;">⏱️ Estimated Arrival: 12 minutes</strong>
+          <p style="margin: 0; color: #0369a1; font-size: 1.2rem; font-weight: bold;" id="priceText">$12.50</p>
+          
+          <p style="margin: 8px 0 0;"><strong>⏱️ ETA:</strong> <span id="etaText">12 minutes</span></p>
         </div>
 
         <button class="primary-btn" onclick="completeRide()">Complete Ride</button>
@@ -72,15 +66,80 @@
     <button onclick="goToPage('admin.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">⚙️</button>
   </div>
 
-  <style>
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  </style>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script>
-    // Load ride data from localStorage
+    let map;
+    let driverMarker, destMarker;
+    let driverLocation = { lat: 40.7128, lng: -74.0060 };
+    let destLocation = { lat: 40.7580, lng: -73.9855 };
+
+    // Initialize map
+    function initMap() {
+      map = L.map('map').setView([40.7128, -74.0060], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Driver marker
+      driverMarker = L.circleMarker([driverLocation.lat, driverLocation.lng], {
+        radius: 10,
+        fillColor: "#10b981",
+        color: "#047857",
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.8
+      }).addTo(map).bindPopup('🚗 You (Driver)');
+
+      // Destination marker
+      destMarker = L.circleMarker([destLocation.lat, destLocation.lng], {
+        radius: 10,
+        fillColor: "#ef4444",
+        color: "#991b1b",
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.8
+      }).addTo(map).bindPopup('🚩 Destination');
+
+      // Route line
+      const polyline = L.polyline([
+        [driverLocation.lat, driverLocation.lng],
+        [destLocation.lat, destLocation.lng]
+      ], { color: '#06b6d4', weight: 3, opacity: 0.8 }).addTo(map);
+
+      const group = new L.featureGroup([driverMarker, destMarker]);
+      map.fitBounds(group.getBounds().pad(0.1), { maxZoom: 13 });
+    }
+
+    // Simulate movement toward destination
+    function simulateMovement() {
+      const destLat = destLocation.lat;
+      const destLng = destLocation.lng;
+      const currentLat = driverLocation.lat;
+      const currentLng = driverLocation.lng;
+      
+      driverLocation.lat = currentLat + (destLat - currentLat) * 0.02;
+      driverLocation.lng = currentLng + (destLng - currentLng) * 0.02;
+      
+      driverMarker.setLatLng([driverLocation.lat, driverLocation.lng]);
+      
+      const dist = calculateDistance(driverLocation, destLocation);
+      document.getElementById('etaText').textContent = Math.max(1, Math.ceil(dist * 2)) + ' min';
+    }
+
+    // Calculate distance
+    function calculateDistance(loc1, loc2) {
+      const R = 6371;
+      const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+      const dLng = (loc2.lng - loc1.lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // Load ride data
     window.addEventListener('load', function() {
       const rideData = JSON.parse(localStorage.getItem('rideRequest'));
       if (rideData) {
@@ -88,6 +147,9 @@
         document.getElementById('destText').textContent = rideData.destination;
         document.getElementById('priceText').textContent = '$' + rideData.price;
       }
+      
+      initMap();
+      setInterval(simulateMovement, 2000);
     });
 
     function completeRide() {
