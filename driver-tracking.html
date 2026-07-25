@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reyed - Driver Tracking</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <p class="eyebrow">Reyed Driver</p>
+        <h1>En Route to Pickup</h1>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="icon-btn" onclick="goHome()">🏠</button>
+      </div>
+    </div>
+
+    <main>
+      <!-- Map Preview -->
+      <div class="map-card">
+        <div class="map-grid"></div>
+        <div class="road road-one"></div>
+        <div class="road road-two"></div>
+        <div class="pin pickup-pin">📍</div>
+        <div class="pin destination-pin">🚩</div>
+        <div class="car" style="font-size: 40px;">🚗</div>
+        <div class="map-label">5 min away</div>
+      </div>
+
+      <!-- Active Ride Info -->
+      <div class="panel">
+        <h2 style="margin-top: 0;">Current Ride</h2>
+        
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <div class="driver-avatar" style="background: #e5e7eb; color: #111;">P</div>
+          <div>
+            <strong>Passenger Name</strong>
+            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">Rating: ⭐ 4.8</p>
+            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">📞 (555) 123-4567</p>
+          </div>
+        </div>
+
+        <div style="padding: 15px; background: #f3f4f6; border-radius: 12px; margin-bottom: 15px;">
+          <p style="margin: 0 0 8px;"><strong>📍 Pickup:</strong></p>
+          <p style="margin: 0 0 12px; color: #6b7280;" id="pickupText">123 Main St, City</p>
+          
+          <p style="margin: 0 0 8px;"><strong>🚩 Destination:</strong></p>
+          <p style="margin: 0 0 12px; color: #6b7280;" id="destText">456 Oak Ave, City</p>
+          
+          <p style="margin: 0 0 8px;"><strong>💰 Fare:</strong></p>
+          <p style="margin: 0; color: #16a34a; font-size: 1.2rem; font-weight: bold;" id="priceText">$12.50</p>
+        </div>
+
+        <div style="padding: 12px; background: #fef3c7; border-radius: 12px; border-left: 4px solid #fbbf24; margin-bottom: 15px;">
+          <strong style="color: #92400e;">⏱️ Estimated Pickup: 5 minutes</strong>
+        </div>
+
+        <button class="primary-btn" onclick="arrivedAtPickup()">I've Arrived at Pickup</button>
+        <button class="secondary-btn" onclick="cancelRide()">Cancel Ride</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Navigation -->
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; gap: 20px; padding: 12px; max-width: 520px; margin: 0 auto; left: 50%; transform: translateX(-50%);">
+    <button onclick="goToPage('customer.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">👤</button>
+    <button onclick="goToPage('rider.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 1;">🚗</button>
+    <button onclick="goToPage('admin.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">⚙️</button>
+  </div>
+
+  <script>
+    // Load ride data from localStorage
+    window.addEventListener('load', function() {
+      const rideData = JSON.parse(localStorage.getItem('rideRequest'));
+      if (rideData) {
+        document.getElementById('pickupText').textContent = rideData.pickup;
+        document.getElementById('destText').textContent = rideData.destination;
+        document.getElementById('priceText').textContent = '$' + rideData.price;
+      }
+    });
+
+    function arrivedAtPickup() {
+      showToast('✅ Pickup complete! Heading to destination...');
+      setTimeout(() => {
+        window.location.href = 'driver-ride-active.html';
+      }, 2000);
+    }
+
+    function cancelRide() {
+      if (confirm('Cancel this ride?')) {
+        showToast('❌ Ride cancelled');
+        setTimeout(() => {
+          window.location.href = 'rider.html';
+        }, 1500);
+      }
+    }
+
+    function goToPage(page) {
+      window.location.href = page;
+    }
+
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+  </script>
+</body>
+</html>
