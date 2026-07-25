@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111111" />
+  <title>RideNow</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Local rides made simple</p>
+        <h1>RideNow</h1>
+      </div>
+      <button id="historyBtn" class="icon-btn" aria-label="Open ride history">☰</button>
+    </header>
+
+    <main>
+      <section class="map-card" aria-label="Map preview">
+        <div class="map-grid"></div>
+        <div class="road road-one"></div>
+        <div class="road road-two"></div>
+        <div class="pin pickup-pin" title="Pickup">●</div>
+        <div class="pin destination-pin" title="Destination">●</div>
+        <div class="car" id="carMarker" aria-hidden="true">🚗</div>
+        <div class="map-label">Live map preview</div>
+      </section>
+
+      <section class="panel">
+        <div id="bookingView">
+          <label for="pickup">Pickup</label>
+          <div class="input-row">
+            <span class="dot pickup-dot"></span>
+            <input id="pickup" autocomplete="street-address" placeholder="Enter pickup location" />
+          </div>
+
+          <label for="destination">Destination</label>
+          <div class="input-row">
+            <span class="dot destination-dot"></span>
+            <input id="destination" autocomplete="street-address" placeholder="Where are you going?" />
+          </div>
+
+          <div class="quick-grid">
+            <button class="quick-place" data-place="Home">Home</button>
+            <button class="quick-place" data-place="Work">Work</button>
+            <button class="quick-place" data-place="Airport">Airport</button>
+          </div>
+
+          <label for="rideType">Ride type</label>
+          <div class="ride-options" id="rideOptions">
+            <button class="ride-option selected" data-type="Economy" data-base="4.5" data-mile="1.75">
+              <span>🚙</span>
+              <strong>Economy</strong>
+              <small>Affordable</small>
+            </button>
+            <button class="ride-option" data-type="Comfort" data-base="7.5" data-mile="2.35">
+              <span>🚘</span>
+              <strong>Comfort</strong>
+              <small>Extra room</small>
+            </button>
+            <button class="ride-option" data-type="XL" data-base="10" data-mile="3.1">
+              <span>🚐</span>
+              <strong>XL</strong>
+              <small>Up to 6</small>
+            </button>
+          </div>
+
+          <div class="estimate-card">
+            <div>
+              <span>Estimated fare</span>
+              <strong id="fare">$0.00</strong>
+            </div>
+            <div>
+              <span>Estimated time</span>
+              <strong id="duration">—</strong>
+            </div>
+          </div>
+
+          <button id="requestRideBtn" class="primary-btn">Request ride</button>
+          <p class="helper">Demo app only. No real drivers, GPS, or payments are connected.</p>
+        </div>
+
+        <div id="activeRideView" class="hidden">
+          <div class="status-badge" id="statusBadge">Finding a driver</div>
+          <h2 id="rideTitle">Matching you with a nearby driver</h2>
+          <p id="rideSubtitle">This usually takes a few seconds.</p>
+
+          <div class="driver-card hidden" id="driverCard">
+            <div class="driver-avatar">AM</div>
+            <div>
+              <strong id="driverName">Alex Morgan</strong>
+              <p><span id="vehicle">Toyota Camry</span> · <span id="plate">8RDN204</span></p>
+              <p>⭐ <span id="rating">4.9</span></p>
+            </div>
+            <a class="call-btn" href="tel:+15555550123">Call</a>
+          </div>
+
+          <div class="trip-route">
+            <div><span class="dot pickup-dot"></span><span id="activePickup"></span></div>
+            <div class="route-line"></div>
+            <div><span class="dot destination-dot"></span><span id="activeDestination"></span></div>
+          </div>
+
+          <div class="estimate-card">
+            <div>
+              <span>Fare</span>
+              <strong id="activeFare">$0.00</strong>
+            </div>
+            <div>
+              <span>ETA</span>
+              <strong id="activeEta">—</strong>
+            </div>
+          </div>
+
+          <button id="advanceRideBtn" class="primary-btn hidden">Start ride</button>
+          <button id="cancelRideBtn" class="secondary-btn">Cancel ride</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <aside id="historyDrawer" class="drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <h2>Ride history</h2>
+      <button id="closeHistoryBtn" class="icon-btn" aria-label="Close ride history">✕</button>
+    </div>
+    <div id="historyList" class="history-list"></div>
+    <button id="clearHistoryBtn" class="secondary-btn">Clear history</button>
+  </aside>
+  <div id="overlay" class="overlay hidden"></div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "RideNow",
+  "short_name": "RideNow",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "description": "A simple Uber-style ride booking prototype."
+}
