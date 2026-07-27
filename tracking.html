@@ -1,220 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reyed - Tracking</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <style>
-    #map { 
-      height: 280px; 
-      width: 100%; 
-      border-radius: 12px; 
-      margin-bottom: 15px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-    .map-marker {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      transform: translate(-50%, -50%);
-      animation: pulse-marker 2s infinite;
-    }
-    .user-marker {
-      background: #3b82f6;
-      border: 3px solid #1e40af;
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
-    }
-    .driver-marker {
-      background: #10b981;
-      border: 3px solid #047857;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
-    }
-    @keyframes pulse-marker {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); }
-      50% { transform: translate(-50%, -50%) scale(1.1); }
-    }
-    .route-line {
-      position: absolute;
-      height: 2px;
-      background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
-      transform-origin: 0 0;
-    }
-    .eta-badge {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: #111;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
+    #map{height:320px;width:100%;border-radius:24px;margin-bottom:-32px;z-index:1;box-shadow:var(--shadow)}
+    .panel{z-index:2}
+    .eta-badge{position:absolute;right:28px;top:92px;z-index:500;background:rgba(255,255,255,.95);padding:9px 12px;border-radius:999px;font-size:.8rem;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+    .app-shell main{position:relative}
   </style>
 </head>
 <body>
   <div class="app-shell">
-    <!-- Topbar -->
     <div class="topbar">
-      <div>
-        <p class="eyebrow">Reyed</p>
-        <h1>Finding Driver</h1>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="icon-btn" onclick="goHome()">🏠</button>
-      </div>
+      <div><p class="eyebrow">Reyed</p><h1>Tracking Ride</h1></div>
+      <button class="icon-btn" onclick="location.href='index.html'">🏠</button>
     </div>
 
     <main>
-      <!-- Live Map -->
-      <div id="map">
-        <div class="route-line" id="routeLine"></div>
-        <div class="user-marker" id="userMarker">📍</div>
-        <div class="driver-marker" id="driverMarker">🚗</div>
-        <div class="eta-badge" id="etaBadge">Searching...</div>
-      </div>
+      <div class="eta-badge" id="etaBadge">Locating…</div>
+      <div id="map" aria-label="Live ride tracking map"></div>
 
-      <!-- Tracking Info -->
       <div class="panel">
-        <div style="text-align: center; padding: 20px;">
-          <div style="font-size: 48px; margin-bottom: 15px; animation: pulse 1s infinite;">🔍</div>
-          <strong style="font-size: 1.2rem;">Finding Available Driver</strong>
-          <p style="margin: 10px 0; color: #6b7280;">This may take a few moments...</p>
+        <div id="rideInfo" style="padding:15px;background:#f3f4f6;border-radius:12px;margin-bottom:15px">
+          <p><strong>📍 Pickup:</strong> <span id="pickupText">—</span></p>
+          <p><strong>🚩 Destination:</strong> <span id="destText">—</span></p>
+          <p><strong>💰 Fare:</strong> <span id="priceText">—</span></p>
+          <p><strong>📡 Driver distance:</strong> <span id="distanceText">—</span></p>
         </div>
-
-        <div id="rideInfo" style="padding: 15px; background: #f3f4f6; border-radius: 12px; margin-bottom: 15px;">
-          <p><strong>📍 Pickup:</strong> <span id="pickupText">123 Main St, City</span></p>
-          <p style="margin: 8px 0;"><strong>🚩 Destination:</strong> <span id="destText">456 Oak Ave, City</span></p>
-          <p style="margin: 8px 0;"><strong>💰 Fare:</strong> <span id="priceText">$12.50</span></p>
-          <p style="margin: 8px 0;"><strong>📡 Distance:</strong> <span id="distanceText">Calculating...</span></p>
-        </div>
-
-        <button class="primary-btn" onclick="driverFound()">Simulate Driver Found</button>
+        <button class="primary-btn" onclick="startDriverSimulation()">Simulate Driver Approaching</button>
         <button class="secondary-btn" onclick="cancelRide()">Cancel Ride</button>
       </div>
     </main>
   </div>
 
-  <!-- Navigation -->
-  <div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; gap: 20px; padding: 12px; max-width: 520px; margin: 0 auto; left: 50%; transform: translateX(-50%);">
-    <button onclick="goToPage('customer.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 1;">👤</button>
-    <button onclick="goToPage('rider.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">🚗</button>
-    <button onclick="goToPage('admin.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">⚙️</button>
-  </div>
-
-  <style>
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  </style>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
-    const map = document.getElementById('map');
-    const userMarker = document.getElementById('userMarker');
-    const driverMarker = document.getElementById('driverMarker');
-    const routeLine = document.getElementById('routeLine');
-    const etaBadge = document.getElementById('etaBadge');
+    let map;
+    let pickupMarker;
+    let destinationMarker;
+    let driverMarker;
+    let driverTimer;
+    let ride;
 
-    let userPos = { x: 80, y: 140 };
-    let driverPos = { x: 280, y: 80 };
-    let driverFound = false;
+    function initTracking() {
+      ride = safeRide();
+      const pickup = validCoords(ride.pickupCoords) ? ride.pickupCoords : { lat: 34.0522, lng: -118.2437 };
+      const destination = validCoords(ride.destinationCoords) ? ride.destinationCoords : { lat: pickup.lat + 0.025, lng: pickup.lng + 0.03 };
 
-    function updateMap() {
-      // Update marker positions
-      userMarker.style.left = userPos.x + 'px';
-      userMarker.style.top = userPos.y + 'px';
-      
-      if (driverFound) {
-        driverMarker.style.left = driverPos.x + 'px';
-        driverMarker.style.top = driverPos.y + 'px';
-        driverMarker.style.opacity = '1';
-      }
+      document.getElementById('pickupText').textContent = ride.pickup || 'Selected pickup';
+      document.getElementById('destText').textContent = ride.destination || 'Selected destination';
+      document.getElementById('priceText').textContent = `$${Number(ride.price || 0).toFixed(2)}`;
 
-      // Draw route line
-      const dx = driverPos.x - userPos.x;
-      const dy = driverPos.y - userPos.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      map = L.map('map').setView(pickup, 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
 
-      routeLine.style.width = distance + 'px';
-      routeLine.style.left = userPos.x + 'px';
-      routeLine.style.top = userPos.y + 'px';
-      routeLine.style.transform = `rotate(${angle}deg)`;
+      pickupMarker = L.marker(pickup).addTo(map).bindPopup('Pickup');
+      destinationMarker = L.marker(destination).addTo(map).bindPopup('Destination');
+      L.polyline([pickup, destination], { weight: 5, opacity: 0.75 }).addTo(map);
 
-      // Calculate and display distance (in km, simulated)
-      const simDistance = (distance / 300 * 5).toFixed(1);
-      const eta = Math.ceil(simDistance * 2);
-      document.getElementById('distanceText').textContent = simDistance + ' km';
-      
-      if (driverFound) {
-        etaBadge.textContent = '⏱️ ' + eta + ' min';
-        
-        // Simulate driver moving toward user
-        const speed = 2;
-        if (Math.sqrt((driverPos.x - userPos.x) ** 2 + (driverPos.y - userPos.y) ** 2) > 20) {
-          driverPos.x -= (driverPos.x - userPos.x) * 0.01;
-          driverPos.y -= (driverPos.y - userPos.y) * 0.01;
-        }
-      }
+      const bounds = L.latLngBounds([pickup, destination]);
+      map.fitBounds(bounds, { padding: [40, 40] });
+      setTimeout(() => map.invalidateSize(), 150);
+
+      const driverStart = { lat: pickup.lat + 0.018, lng: pickup.lng - 0.018 };
+      driverMarker = L.marker(driverStart, {
+        icon: L.divIcon({ className: '', html: '<div style="font-size:32px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))">🚗</div>', iconSize: [36,36], iconAnchor: [18,18] })
+      }).addTo(map).bindPopup('Driver');
+
+      updateDistance(driverStart, pickup);
     }
 
-    // Load ride data
-    window.addEventListener('load', function() {
-      const rideData = JSON.parse(localStorage.getItem('rideRequest'));
-      if (rideData) {
-        document.getElementById('pickupText').textContent = rideData.pickup;
-        document.getElementById('destText').textContent = rideData.destination;
-        document.getElementById('priceText').textContent = '$' + rideData.price;
-      }
-      
-      updateMap();
-      setInterval(updateMap, 100);
-    });
+    function startDriverSimulation() {
+      clearInterval(driverTimer);
+      const pickup = validCoords(ride.pickupCoords) ? ride.pickupCoords : { lat: 34.0522, lng: -118.2437 };
+      document.getElementById('etaBadge').textContent = 'Driver approaching';
 
-    function driverFound() {
-      window.driverFound = true;
-      driverFound = true;
-      showToast('✅ Driver found! Alex is approaching...');
-      setTimeout(() => {
-        window.location.href = 'driver-found.html';
-      }, 2000);
+      driverTimer = setInterval(() => {
+        const current = driverMarker.getLatLng();
+        const next = {
+          lat: current.lat + (pickup.lat - current.lat) * 0.08,
+          lng: current.lng + (pickup.lng - current.lng) * 0.08
+        };
+        driverMarker.setLatLng(next);
+        const meters = map.distance(next, pickup);
+        updateDistance(next, pickup);
+
+        if (meters < 35) {
+          clearInterval(driverTimer);
+          driverMarker.setLatLng(pickup).openPopup();
+          document.getElementById('etaBadge').textContent = 'Driver arrived';
+          document.getElementById('distanceText').textContent = 'Arrived';
+          ride.status = 'driver-arrived';
+          localStorage.setItem('rideRequest', JSON.stringify(ride));
+        }
+      }, 500);
+    }
+
+    function updateDistance(driver, pickup) {
+      const meters = map.distance(driver, pickup);
+      const miles = meters / 1609.344;
+      document.getElementById('distanceText').textContent = miles < 0.1 ? `${Math.round(meters)} m` : `${miles.toFixed(1)} mi`;
+      document.getElementById('etaBadge').textContent = `${Math.max(1, Math.ceil(miles * 3))} min away`;
     }
 
     function cancelRide() {
-      if (confirm('Cancel this ride request?')) {
-        showToast('❌ Ride cancelled');
-        setTimeout(() => {
-          window.location.href = 'customer.html';
-        }, 1500);
-      }
+      if (!confirm('Cancel this ride request?')) return;
+      clearInterval(driverTimer);
+      localStorage.removeItem('rideRequest');
+      location.href = 'customer.html';
     }
 
-    function goToPage(page) {
-      window.location.href = page;
+    function validCoords(value) {
+      return value && Number.isFinite(Number(value.lat)) && Number.isFinite(Number(value.lng));
     }
 
-    function goHome() {
-      window.location.href = 'index.html';
+    function safeRide() {
+      try { return JSON.parse(localStorage.getItem('rideRequest')) || {}; }
+      catch { return {}; }
     }
 
-    function showToast(msg) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
+    window.addEventListener('load', initTracking);
   </script>
 </body>
 </html>
