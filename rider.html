@@ -1,25 +1,29 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Driver</title>
-<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
+<link rel="stylesheet" href="./styles.css?v=5"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚙</div><div><p class="eyebrow">Driver</p><h1 id="welcome">Driver dashboard</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
 <main><div class="tabs"><button class="tab active" data-view="available">Available rides</button><button class="tab" data-view="active">Active ride</button><button class="tab" data-view="history">History</button></div>
-<section id="availableView"><div class="panel"><h2>Nearby requests</h2><div id="availableList"></div></div></section>
+<section id="availableView"><div class="panel"><h2>Nearby requests</h2><div class="available-map-wrap"><div id="availableMap" class="map small"></div><div class="map-legend"><span><i class="map-dot pickup"></i>Pickup</span><span><i class="map-dot dropoff"></i>Drop-off</span></div></div><div id="availableList"></div></div></section>
 <section id="activeView" class="hidden"><div class="panel"><div id="driverMap" class="map small"></div><div id="activeList"></div></div></section>
 <section id="historyView" class="hidden"><div class="panel"><h2>Completed rides</h2><div id="historyList"></div></div></section>
 </main><nav class="bottom-nav"><a class="active" href="rider.html"><span>🚙</span>Driver</a></nav></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script><script>
-const user=requireRole("driver");let map,layers=[];
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./app.js?v=5"></script><script>
+const user=requireRole("driver");let map,availableMap,layers=[],availableLayers=[],selectedRideId=null,driverCoord=null;
 if(user){
  document.getElementById("welcome").textContent=user.name;
  document.getElementById("logoutBtn").addEventListener("click",logout);
  document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>showView(btn.dataset.view)));
  map=initLeafletMap("driverMap");
+ availableMap=initLeafletMap("availableMap");
+ locateDriver();
  render();
 }
 function showView(view){
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
  ["available","active","history"].forEach(v=>document.getElementById(v+"View").classList.toggle("hidden",v!==view));
- if(view==="active"&&map)setTimeout(()=>map.invalidateSize(),80);render();
+ if(view==="active"&&map)setTimeout(()=>map.invalidateSize(),80);
+ if(view==="available"&&availableMap)setTimeout(()=>availableMap.invalidateSize(),80);
+ render();
 }
 function driverActions(r){
  if(r.status==="requested")return `<button class="btn primary" data-action="accept" data-id="${r.id}">Accept ride</button>`;
@@ -33,11 +37,16 @@ window.render=function(){
  const available=db.rides.filter(r=>r.status==="requested"&&!r.driverId).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
  const active=db.rides.filter(r=>r.driverId===user.id&&!["completed","cancelled"].includes(r.status));
  const past=db.rides.filter(r=>r.driverId===user.id&&r.status==="completed").sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
- document.getElementById("availableList").innerHTML=available.length?available.map(r=>rideCard(r,{actions:driverActions})).join(""):'<div class="empty">No open requests right now.</div>';
+ document.getElementById("availableList").innerHTML=available.length?available.map(r=>{
+   const distance=driverCoord&&r.pickupLat!=null?haversineMiles(driverCoord,{lat:r.pickupLat,lng:r.pickupLng}):null;
+   return `<div data-request-card="${r.id}" class="${selectedRideId===r.id?"selected-request":""}">${rideCard(r,{actions:ride=>`<button class="btn ghost" data-preview="${ride.id}">Show on map</button>${driverActions(ride)}${distance!=null?`<span class="driver-distance">${distance.toFixed(1)} mi from you</span>`:""}`})}</div>`;
+ }).join(""):'<div class="empty">No open requests right now. Create a ride from a rider account, then return here.</div>';
  document.getElementById("activeList").innerHTML=active.length?active.map(r=>rideCard(r,{actions:driverActions})).join(""):'<div class="empty">No active ride.</div>';
  document.getElementById("historyList").innerHTML=past.length?past.map(r=>rideCard(r)).join(""):'<div class="empty">No completed rides.</div>';
  document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>advance(b.dataset.id,b.dataset.action)));
+ document.querySelectorAll("[data-preview]").forEach(b=>b.addEventListener("click",()=>{selectedRideId=b.dataset.preview;render();drawAvailableMap(available.find(r=>r.id===selectedRideId));}));
  drawMap(active[0]);
+ drawAvailableMap(available.find(r=>r.id===selectedRideId)||available[0]);
 }
 function advance(id,action){
  const db=getDB(),r=db.rides.find(x=>x.id===id);if(!r)return;
@@ -57,4 +66,22 @@ function drawMap(r){
  layers.push(L.marker(p).addTo(map).bindPopup("Pickup"),L.marker(d).addTo(map).bindPopup("Drop-off"),L.polyline([p,d],{weight:5}).addTo(map));
  map.fitBounds(L.latLngBounds([p,d]),{padding:[35,35]});
 }
+function locateDriver(){
+ if(!navigator.geolocation)return;
+ navigator.geolocation.getCurrentPosition(pos=>{driverCoord={lat:pos.coords.latitude,lng:pos.coords.longitude};render()},()=>{}, {enableHighAccuracy:true,timeout:8000});
+}
+function drawAvailableMap(r){
+ if(!availableMap)return;availableLayers.forEach(l=>availableMap.removeLayer(l));availableLayers=[];
+ if(!r||r.pickupLat==null||r.destLat==null)return;
+ selectedRideId=r.id;
+ const p=[r.pickupLat,r.pickupLng],d=[r.destLat,r.destLng];
+ const pickupIcon=L.divIcon({className:"",html:'<div style="background:#1268e8;color:white;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;border:2px solid white;box-shadow:0 2px 8px #0004"><span style="transform:rotate(45deg)">P</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
+ const dropIcon=L.divIcon({className:"",html:'<div style="background:#14804a;color:white;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;border:2px solid white;box-shadow:0 2px 8px #0004"><span style="transform:rotate(45deg)">D</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
+ availableLayers.push(L.marker(p,{icon:pickupIcon}).addTo(availableMap).bindPopup(`<strong>Pickup</strong><br>${escapeHTML(r.pickup)}`),
+ L.marker(d,{icon:dropIcon}).addTo(availableMap).bindPopup(`<strong>Drop-off</strong><br>${escapeHTML(r.destination)}`),
+ L.polyline([p,d],{weight:5}).addTo(availableMap));
+ if(driverCoord){availableLayers.push(L.circleMarker([driverCoord.lat,driverCoord.lng],{radius:8,weight:3,fillOpacity:1}).addTo(availableMap).bindPopup("Your location"))}
+ const bounds=[p,d];if(driverCoord)bounds.push([driverCoord.lat,driverCoord.lng]);availableMap.fitBounds(bounds,{padding:[35,35]});
+}
+
 </script></body></html>

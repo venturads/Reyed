@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reyed Rider</title><link rel="stylesheet" href="style.css">
+<title>Reyed Rider</title><link rel="stylesheet" href="./styles.css?v=5">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚘</div><div><p class="eyebrow">Rider</p><h1 id="welcome">Reyed</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
 <main>
@@ -9,8 +9,8 @@
 <div class="panel"><div id="riderMap" class="map"></div><p class="map-help">Street names come from OpenStreetMap. Tap once for pickup, then again for drop-off, or use your location.</p>
 <div class="btn-row" style="margin-top:10px"><button class="btn secondary" id="locateBtn">📍 Use my location</button><button class="btn ghost" id="resetPins">Reset pins</button></div></div>
 <div class="panel"><div class="grid">
-<div><label for="pickup">Pickup address</label><input id="pickup" placeholder="Example: 123 Main Street"></div>
-<div><label for="destination">Drop-off address</label><input id="destination" placeholder="Example: Downtown Station"></div>
+<div class="autocomplete-wrap"><label for="pickup">Pickup address or business</label><input id="pickup" autocomplete="off" placeholder="Try Starbucks, hospital, or 123 Main Street"><div id="pickupStatus" class="search-status"></div><div id="pickupSuggestions" class="suggestions hidden"></div></div>
+<div class="autocomplete-wrap"><label for="destination">Drop-off address or business</label><input id="destination" autocomplete="off" placeholder="Search a business, landmark, or street"><div id="destinationStatus" class="search-status"></div><div id="destinationSuggestions" class="suggestions hidden"></div></div>
 <div><label for="offer">Your offer</label><input id="offer" type="number" min="2" step=".50" value="15"></div>
 <button class="btn primary full" id="requestBtn">Request ride</button>
 <a class="btn secondary full" style="text-decoration:none;text-align:center" href="https://www.paypal.com/" target="_blank" rel="noopener">Open payment site</a>
@@ -18,7 +18,7 @@
 <section id="ongoingView" class="hidden"><div class="panel"><h2>Current ride</h2><div id="ongoingList"></div></div></section>
 <section id="historyView" class="hidden"><div class="panel"><h2>Past rides</h2><div id="historyList"></div></div></section>
 </main><nav class="bottom-nav"><a class="active" href="customer.html"><span>👤</span>Rider</a></nav></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script><script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./app.js?v=5"></script><script>
 const user=requireRole("rider");
 let map,pickupMarker,destMarker,routeLine,pickupCoord,destCoord;
 if(user){
@@ -30,6 +30,9 @@ if(user){
  document.getElementById("locateBtn").addEventListener("click",locate);
  document.getElementById("resetPins").addEventListener("click",resetPins);
  document.getElementById("requestBtn").addEventListener("click",requestRide);
+ setupAutocomplete("pickup", setPickup);
+ setupAutocomplete("destination", setDestination);
+ document.addEventListener("click",e=>{if(!e.target.closest(".autocomplete-wrap"))document.querySelectorAll(".suggestions").forEach(x=>x.classList.add("hidden"))});
  render();
 }
 function showView(view){
@@ -42,13 +45,13 @@ function setPickup(latlng){
  pickupCoord={lat:latlng.lat,lng:latlng.lng};
  if(pickupMarker)pickupMarker.setLatLng(latlng);else pickupMarker=L.marker(latlng).addTo(map).bindPopup("Pickup");
  pickupMarker.openPopup();drawLine();
- document.getElementById("pickup").value=`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+ reverseGeocode(latlng).then(name=>{document.getElementById("pickup").value=name||`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`});
 }
 function setDestination(latlng){
  destCoord={lat:latlng.lat,lng:latlng.lng};
  if(destMarker)destMarker.setLatLng(latlng);else destMarker=L.marker(latlng).addTo(map).bindPopup("Drop-off");
  destMarker.openPopup();drawLine();
- document.getElementById("destination").value=`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+ reverseGeocode(latlng).then(name=>{document.getElementById("destination").value=name||`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`});
 }
 function drawLine(){
  if(routeLine)map.removeLayer(routeLine);
@@ -63,6 +66,40 @@ function locate(){
  if(!navigator.geolocation){toast("Location is not supported.");return}
  navigator.geolocation.getCurrentPosition(pos=>{const ll={lat:pos.coords.latitude,lng:pos.coords.longitude};setPickup(ll);map.setView(ll,16)},()=>toast("Location permission was not available."),{enableHighAccuracy:true,timeout:10000});
 }
+
+let searchTimers={};
+function setupAutocomplete(inputId,setter){
+ const input=document.getElementById(inputId),box=document.getElementById(inputId+"Suggestions"),status=document.getElementById(inputId+"Status");
+ input.addEventListener("input",()=>{
+   clearTimeout(searchTimers[inputId]);const q=input.value.trim();
+   if(q.length<3){box.classList.add("hidden");box.innerHTML="";status.textContent=q?"Type at least 3 characters.":"";return}
+   status.textContent="Searching nearby addresses and businesses…";
+   searchTimers[inputId]=setTimeout(async()=>{
+     try{
+       const center=map?.getCenter();const viewbox=center?`&viewbox=${center.lng-0.35},${center.lat+0.25},${center.lng+0.35},${center.lat-0.25}&bounded=0`:"";
+       const url=`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us&q=${encodeURIComponent(q)}${viewbox}`;
+       const res=await fetch(url,{headers:{"Accept":"application/json"}});
+       if(!res.ok)throw new Error("search failed");
+       const results=await res.json();
+       status.textContent=results.length?`${results.length} nearby option${results.length===1?"":"s"}`:"No nearby matches found.";
+       box.innerHTML=results.map((item,i)=>`<button type="button" class="suggestion" data-i="${i}"><strong>${escapeHTML(item.name||item.display_name.split(",")[0])}</strong><span>${escapeHTML(item.display_name)}</span></button>`).join("");
+       box.classList.toggle("hidden",!results.length);
+       box.querySelectorAll(".suggestion").forEach(btn=>btn.addEventListener("click",()=>{
+         const item=results[Number(btn.dataset.i)],ll={lat:Number(item.lat),lng:Number(item.lon)};
+         input.value=item.display_name;setter(ll);map.setView(ll,16);box.classList.add("hidden");status.textContent="";
+       }));
+     }catch(e){status.textContent="Address search is temporarily unavailable.";box.classList.add("hidden")}
+   },450);
+ });
+}
+async function reverseGeocode(latlng){
+ try{
+   const url=`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${latlng.lat}&lon=${latlng.lng}`;
+   const res=await fetch(url,{headers:{"Accept":"application/json"}});if(!res.ok)return "";
+   const item=await res.json();return item.display_name||"";
+ }catch(e){return ""}
+}
+
 function requestRide(){
  const pickup=document.getElementById("pickup").value.trim(),destination=document.getElementById("destination").value.trim(),offer=Number(document.getElementById("offer").value);
  if(!pickup||!destination){toast("Add pickup and drop-off.");return}
