@@ -1,265 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reyed - Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 16px 0;
-    }
-    .stat-card {
-      padding: 12px;
-      background: #f9fafb;
-      border-radius: 12px;
-      border-left: 4px solid #111;
-    }
-    .stat-card strong {
-      display: block;
-      font-size: 1.3rem;
-      margin: 8px 0 4px;
-    }
-    .stat-card small {
-      color: #6b7280;
-      font-size: .8rem;
-    }
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin: 16px 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .tab-btn {
-      padding: 10px 16px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: #6b7280;
-      border-bottom: 3px solid transparent;
-      font-weight: 600;
-    }
-    .tab-btn.active {
-      color: #111;
-      border-bottom-color: #111;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <div class="app-shell">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div>
-        <p class="eyebrow">Reyed Admin</p>
-        <h1>Dashboard</h1>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="icon-btn" onclick="goHome()">🏠</button>
-        <button class="icon-btn" onclick="logout()">🚪</button>
-      </div>
-    </div>
-
-    <main>
-      <!-- Key Metrics -->
-      <div class="panel">
-        <h2 style="margin-top: 0;">Today's Overview</h2>
-        
-        <div class="stat-grid">
-          <div class="stat-card" style="border-left-color: #16a34a;">
-            <small>Total Rides</small>
-            <strong>342</strong>
-            <small>↑ 12% from yesterday</small>
-          </div>
-          <div class="stat-card" style="border-left-color: #2563eb;">
-            <small>Active Drivers</small>
-            <strong>87</strong>
-            <small>45 online now</small>
-          </div>
-          <div class="stat-card" style="border-left-color: #dc2626;">
-            <small>Revenue</small>
-            <strong>$4,250</strong>
-            <small>↑ 8% from yesterday</small>
-          </div>
-          <div class="stat-card" style="border-left-color: #f59e0b;">
-            <small>Avg Rating</small>
-            <strong>4.87</strong>
-            <small>Out of 5.0</small>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div class="panel">
-        <div class="tabs">
-          <button class="tab-btn active" onclick="switchTab('rides')">🚗 Rides</button>
-          <button class="tab-btn" onclick="switchTab('drivers')">👨 Drivers</button>
-          <button class="tab-btn" onclick="switchTab('users')">👥 Users</button>
-          <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
-        </div>
-
-        <!-- Rides Tab -->
-        <div id="rides" class="tab-content active">
-          <h3>Active & Recent Rides</h3>
-          <div class="history-list" style="max-height: 60vh;">
-            <div class="history-item">
-              <strong>🟢 ACTIVE: Sarah J. → Michael C.</strong>
-              <p>📍 Downtown → Airport | $42.00 | 14 min</p>
-              <p>Driver: Jordan Davis | 🚗 2022 Toyota Camry</p>
-            </div>
-            <div class="history-item">
-              <strong>✅ COMPLETED: Emily R. → Park Plaza</strong>
-              <p>📍 123 Main St → Shopping Dist | $18.50 | 12 min</p>
-              <p>Driver: Alex Morgan | Rating: ⭐ 5.0</p>
-            </div>
-            <div class="history-item">
-              <strong>✅ COMPLETED: John D. → Office</strong>
-              <p>📍 Home → Business Center | $12.75 | 8 min</p>
-              <p>Driver: Casey Taylor | Rating: ⭐ 4.9</p>
-            </div>
-            <div class="history-item">
-              <strong>⏳ PENDING: David S. Awaiting Driver</strong>
-              <p>📍 Station → Hospital | $25.00 | 2 drivers responding</p>
-              <p>Request time: 3 minutes ago</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Drivers Tab -->
-        <div id="drivers" class="tab-content">
-          <h3>Driver Management</h3>
-          <div class="history-list" style="max-height: 60vh;">
-            <div class="history-item">
-              <strong>Jordan Davis</strong>
-              <p>📞 (555) 903-1144 | ⭐ 4.9 (1,240 rides)</p>
-              <p>🚗 2022 Black Toyota Camry | 🟢 Online</p>
-              <p>Today: $247.50 • 12 rides • 3.5h online</p>
-            </div>
-            <div class="history-item">
-              <strong>Alex Morgan</strong>
-              <p>📞 (555) 456-7890 | ⭐ 4.85 (958 rides)</p>
-              <p>🚗 2021 Silver Honda Accord | 🟢 Online</p>
-              <p>Today: $189.25 • 9 rides • 2.8h online</p>
-            </div>
-            <div class="history-item">
-              <strong>Casey Taylor</strong>
-              <p>📞 (555) 789-0123 | ⭐ 4.92 (1,567 rides)</p>
-              <p>🚗 2023 White Tesla Model 3 | 🟡 On Break</p>
-              <p>Today: $312.00 • 15 rides • 4.2h online</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Users Tab -->
-        <div id="users" class="tab-content">
-          <h3>User Analytics</h3>
-          <div style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0;">
-            <div style="padding: 12px; background: #f3f4f6; border-radius: 12px;">
-              <p style="margin: 0; color: #6b7280; font-size: .8rem;">Total Registered Users</p>
-              <strong style="font-size: 1.5rem;">12,847</strong>
-            </div>
-            <div style="padding: 12px; background: #f3f4f6; border-radius: 12px;">
-              <p style="margin: 0; color: #6b7280; font-size: .8rem;">Active This Week</p>
-              <strong style="font-size: 1.5rem;">4,325</strong>
-            </div>
-            <div style="padding: 12px; background: #f3f4f6; border-radius: 12px;">
-              <p style="margin: 0; color: #6b7280; font-size: .8rem;">New Signups (24h)</p>
-              <strong style="font-size: 1.5rem;">142</strong>
-            </div>
-          </div>
-          <button class="primary-btn" onclick="viewDetailedAnalytics()">View Detailed Analytics</button>
-        </div>
-
-        <!-- Settings Tab -->
-        <div id="settings" class="tab-content">
-          <h3>Admin Settings</h3>
-          <div style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0;">
-            <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 12px;">
-              <strong>Base Fare</strong>
-              <p style="margin: 5px 0 10px; color: #6b7280; font-size: .84rem;">Minimum charge per ride</p>
-              <div class="input-row">
-                <input type="text" value="$2.50" style="padding: 10px;">
-              </div>
-            </div>
-            <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 12px;">
-              <strong>Per Km Rate</strong>
-              <p style="margin: 5px 0 10px; color: #6b7280; font-size: .84rem;">Charge per kilometer</p>
-              <div class="input-row">
-                <input type="text" value="$1.25" style="padding: 10px;">
-              </div>
-            </div>
-            <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 12px;">
-              <strong>Platform Commission</strong>
-              <p style="margin: 5px 0 10px; color: #6b7280; font-size: .84rem;">% taken from each ride</p>
-              <div class="input-row">
-                <input type="text" value="20%" style="padding: 10px;">
-              </div>
-            </div>
-            <button class="primary-btn" onclick="saveSettings()">Save Settings</button>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Navigation -->
-  <div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; gap: 20px; padding: 12px; max-width: 520px; margin: 0 auto;">
-    <button onclick="goToPage('customer.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">👤</button>
-    <button onclick="goToPage('rider.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">🚗</button>
-    <button onclick="goToPage('admin.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 1;">⚙️</button>
-  </div>
-
-  <script>
-    function switchTab(tabName) {
-      // Hide all tabs
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      
-      // Show selected tab
-      document.getElementById(tabName).classList.add('active');
-      event.target.classList.add('active');
-    }
-
-    function viewDetailedAnalytics() {
-      showToast('📊 Detailed analytics page loading...');
-    }
-
-    function saveSettings() {
-      showToast('✅ Settings saved successfully!');
-    }
-
-    function logout() {
-      if (confirm('Are you sure you want to logout?')) {
-        showToast('👋 Logging out...');
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 1500);
-      }
-    }
-
-    function goToPage(page) {
-      window.location.href = page;
-    }
-
-    function goHome() {
-      window.location.href = 'index.html';
-    }
-
-    function showToast(msg) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-  </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Admin</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">⚙️</div><div><p class="eyebrow">Administrator</p><h1>Reyed control center</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
+<main><div class="grid two">
+<div class="panel"><div class="small">Total rides</div><div class="money" id="totalRides">0</div></div>
+<div class="panel"><div class="small">Active rides</div><div class="money" id="activeRides">0</div></div></div>
+<div class="panel"><div class="meta"><h2>All rides</h2><button class="btn secondary" id="seedBtn">Reset demo data</button></div>
+<div class="table-wrap"><table><thead><tr><th>Ride</th><th>People</th><th>Route</th><th>Offer</th><th>Status</th><th>Edit</th></tr></thead><tbody id="rideRows"></tbody></table></div></div>
+<div class="panel"><h2>All users</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Email</th></tr></thead><tbody id="userRows"></tbody></table></div></div>
+<div class="notice"><strong>Demo security note:</strong> this static GitHub Pages version separates screens and data by login in the browser, but true secure accounts across different phones require a backend such as Firebase or Supabase.</div>
+</main><nav class="bottom-nav"><a class="active" href="admin.html"><span>⚙️</span>Admin</a></nav></div>
+<script src="app.js"></script><script>
+const user=requireRole("admin");
+if(user){
+ document.getElementById("logoutBtn").addEventListener("click",logout);
+ document.getElementById("seedBtn").addEventListener("click",()=>{if(confirm("Reset all demo users and rides?")){saveDB(defaultDB());render();toast("Demo data reset.")}});
+ render();
+}
+window.render=function(){
+ const db=getDB(),active=db.rides.filter(r=>!["completed","cancelled"].includes(r.status));
+ document.getElementById("totalRides").textContent=db.rides.length;document.getElementById("activeRides").textContent=active.length;
+ document.getElementById("userRows").innerHTML=db.users.map(u=>`<tr><td>${escapeHTML(u.name)}</td><td>${escapeHTML(u.role)}</td><td>${escapeHTML(u.email)}</td></tr>`).join("");
+ document.getElementById("rideRows").innerHTML=db.rides.length?db.rides.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).map(r=>`<tr>
+ <td><a href="tracking.html?id=${encodeURIComponent(r.id)}">#${escapeHTML(r.id.slice(-7))}</a><div class="small">${dateText(r.createdAt)}</div></td>
+ <td>${escapeHTML(getUser(r.riderId)?.name||"Unknown")}<div class="small">${escapeHTML(getUser(r.driverId)?.name||"Unassigned")}</div></td>
+ <td>${escapeHTML(r.pickup)}<div class="small">to ${escapeHTML(r.destination)}</div></td><td>${money(r.offer)}</td>
+ <td><select data-status="${r.id}">${Object.keys(STATUS_LABELS).map(s=>`<option value="${s}" ${s===r.status?"selected":""}>${statusLabel(s)}</option>`).join("")}</select></td>
+ <td><div class="btn-row"><button class="btn secondary" data-save="${r.id}">Save</button><button class="btn bad" data-delete="${r.id}">Delete</button></div></td></tr>`).join(""):'<tr><td colspan="6" class="empty">No rides.</td></tr>';
+ document.querySelectorAll("[data-save]").forEach(b=>b.addEventListener("click",()=>saveStatus(b.dataset.save)));
+ document.querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>deleteRide(b.dataset.delete)));
+}
+function saveStatus(id){const db=getDB(),r=db.rides.find(x=>x.id===id),sel=document.querySelector(`[data-status="${id}"]`);if(r&&sel){r.status=sel.value;r.updatedAt=new Date().toISOString();if(r.status==="completed")r.completedAt=r.completedAt||new Date().toISOString();saveDB(db);render();toast("Ride updated.")}}
+function deleteRide(id){if(!confirm("Delete this ride?"))return;const db=getDB();db.rides=db.rides.filter(r=>r.id!==id);saveDB(db);render();toast("Ride deleted.")}
+</script></body></html>

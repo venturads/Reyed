@@ -1,113 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reyed - Home</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .landing-hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      gap: 24px;
-      padding: 20px;
-      text-align: center;
-    }
-    .landing-hero h1 {
-      font-size: 3rem;
-      margin: 0;
-      background: linear-gradient(135deg, #111, #666);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .landing-hero p {
-      font-size: 1.1rem;
-      color: #6b7280;
-      margin: 0;
-      max-width: 300px;
-    }
-    .role-buttons {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      width: 100%;
-      max-width: 300px;
-    }
-    .role-btn {
-      padding: 16px;
-      border: 2px solid #e5e7eb;
-      background: white;
-      border-radius: 16px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 1rem;
-      transition: all .3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-    .role-btn:hover {
-      border-color: #111;
-      background: #f3f4f6;
-      transform: translateY(-2px);
-    }
-    .role-btn-primary {
-      background: #111;
-      color: white;
-      border-color: #111;
-    }
-    .role-btn-primary:hover {
-      background: #333;
-      border-color: #333;
-    }
-  </style>
-</head>
-<body>
-  <div class="landing-hero">
-    <div style="font-size: 4rem; margin: 20px 0;">🚗</div>
-    <h1>Reyed</h1>
-    <p>Your multi-sided ride-sharing platform</p>
-    
-    <div class="role-buttons">
-      <button class="role-btn role-btn-primary" onclick="goToRole('customer')">
-        <span>👤</span>
-        <span>Request Ride</span>
-      </button>
-      <button class="role-btn" onclick="goToRole('rider')">
-        <span>🚗</span>
-        <span>Drive & Earn</span>
-      </button>
-      <button class="role-btn" onclick="goToRole('admin')">
-        <span>⚙️</span>
-        <span>Admin Dashboard</span>
-      </button>
-    </div>
-
-    <div style="margin-top: 40px; padding: 16px; background: #f3f4f6; border-radius: 16px; max-width: 300px;">
-      <h3 style="margin: 0 0 12px; font-size: 1rem;">✨ Features</h3>
-      <ul style="margin: 0; padding: 0 0 0 20px; text-align: left; color: #6b7280; font-size: .9rem; line-height: 1.6;">
-        <li>Real-time tracking</li>
-        <li>Multiple ride types</li>
-        <li>Secure payments</li>
-        <li>Driver analytics</li>
-        <li>Admin controls</li>
-      </ul>
-    </div>
-  </div>
-
-  <script>
-    function goToRole(role) {
-      const pages = {
-        'customer': 'customer.html',
-        'rider': 'rider.html',
-        'admin': 'admin.html'
-      };
-      window.location.href = pages[role];
-    }
-  </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reyed Login</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="login-wrap"><div class="login-card">
+<div class="logo">🚘</div><p class="eyebrow">Reyed</p><h1 style="font-size:1.7rem">Sign in</h1>
+<p class="small">Riders, drivers, and admins each open only their own workspace.</p>
+<div style="margin-top:18px"><label for="email">Email</label><input id="email" type="email" autocomplete="username" placeholder="name@example.com"></div>
+<div style="margin-top:12px"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"></div>
+<button class="btn primary full" id="loginBtn" style="margin-top:16px">Sign in</button>
+<div class="demo-box"><strong>Demo logins</strong><br>
+Rider: rider@reyed.demo / rider123<br>Driver: driver@reyed.demo / driver123<br>Admin: admin@reyed.demo / admin123</div>
+</div></div><script src="app.js"></script><script>
+(function(){
+  getDB();
+  const s=getSession(); if(s){const u=currentUser(); if(u) route(u);}
+  document.getElementById("loginBtn").addEventListener("click",login);
+  document.addEventListener("keydown",e=>{if(e.key==="Enter")login()});
+  function login(){
+    const email=document.getElementById("email").value.trim().toLowerCase();
+    const password=document.getElementById("password").value;
+    const user=getDB().users.find(u=>u.email.toLowerCase()===email&&u.password===password);
+    if(!user){toast("Email or password is incorrect.");return}
+    setSession(user);route(user);
+  }
+  function route(user){location.href=user.role==="rider"?"customer.html":user.role==="driver"?"rider.html":"admin.html"}
+})();
+</script></body></html>

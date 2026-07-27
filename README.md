@@ -1,13 +1,19 @@
-# RideQuote
+# Reyed finished static demo
 
-Static GitHub Pages demo with Rider, Driver, and Admin tabs.
+Upload all files in this folder to the root of the GitHub repository.
 
-## How to deploy
-1. Unzip the project.
-2. Upload `index.html`, `styles.css`, `app.js`, and `README.md` to the root of your GitHub repository.
-3. In GitHub, open Settings → Pages.
-4. Choose Deploy from a branch.
-5. Select `main` and `/root`, then save.
+Demo accounts:
+- Rider: rider@reyed.demo / rider123
+- Driver: driver@reyed.demo / driver123
+- Admin: admin@reyed.demo / admin123
 
-## Important
-This version uses browser localStorage, so all three tabs work together on the same browser and device. Separate phones will not sync until a backend such as Firebase or Supabase is added.
+Features:
+- OpenStreetMap street-label tiles through Leaflet
+- Tap map for pickup and drop-off
+- Rider ongoing and past rides
+- Driver progression: Accept → Arrived → Pick up → Drop off
+- Role-filtered rider and driver data
+- Admin can view, edit, and delete all rides
+- Browser localStorage database and sessionStorage login
+
+Important: GitHub Pages is static. This is a working same-browser demo, not secure production authentication. For separate phones and secure accounts, connect Firebase or Supabase.

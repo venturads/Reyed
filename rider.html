@@ -1,160 +1,60 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reyed - Rider (Driver)</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="app-shell">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div>
-        <p class="eyebrow">Reyed Driver</p>
-        <h1>Your Status</h1>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="icon-btn" onclick="goHome()">🏠</button>
-        <button class="icon-btn" onclick="toggleDriverSettings()">⚙️</button>
-      </div>
-    </div>
-
-    <main>
-      <!-- Status Card -->
-      <div class="map-card">
-        <div class="map-grid"></div>
-        <div class="road road-one"></div>
-        <div class="road road-two"></div>
-        <div class="car" style="font-size: 40px;">🚗</div>
-        <div class="map-label">You are here</div>
-      </div>
-
-      <!-- Driver Info Panel -->
-      <div class="panel">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-          <div class="driver-avatar">J</div>
-          <div>
-            <strong>Jordan Davis</strong>
-            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">⭐ 4.9 (1,240 rides)</p>
-            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">🚗 2022 Black Toyota Camry</p>
-          </div>
-        </div>
-
-        <label>Online Status</label>
-        <div style="display: flex; gap: 10px; margin-top: 12px;">
-          <button class="ride-option selected" onclick="setStatus(this, 'online')" style="flex: 1;">
-            <span>🟢</span>
-            <small>Online</small>
-          </button>
-          <button class="ride-option" onclick="setStatus(this, 'break')" style="flex: 1;">
-            <span>🟡</span>
-            <small>On Break</small>
-          </button>
-          <button class="ride-option" onclick="setStatus(this, 'offline')" style="flex: 1;">
-            <span>⚫</span>
-            <small>Offline</small>
-          </button>
-        </div>
-
-        <div style="margin-top: 20px; padding: 12px; background: #f0fdf4; border-radius: 12px; border-left: 4px solid #16a34a;">
-          <strong style="color: #166534;">Today's Earnings</strong>
-          <p style="margin: 5px 0; color: #16a34a; font-size: 1.3rem; font-weight: bold;">$247.50</p>
-          <p style="margin: 5px 0; color: #6b7280; font-size: .84rem;">12 rides • 3.5 hours online</p>
-        </div>
-
-        <label style="margin-top: 20px;">Active Ride Requests</label>
-        <div id="rideRequests" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
-          <!-- Ride requests will appear here -->
-          <div style="padding: 12px; background: #fef3c7; border-radius: 12px; border-left: 4px solid #fbbf24;">
-            <strong>📍 142 Oak Street</strong>
-            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">→ 856 Pine Avenue</p>
-            <p style="margin: 3px 0; color: #6b7280; font-size: .84rem;">🚶 2.3 km away • $15.50</p>
-            <div style="display: flex; gap: 8px; margin-top: 8px;">
-              <button style="flex: 1; padding: 8px; background: #16a34a; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;" onclick="acceptRide()">Accept</button>
-              <button style="flex: 1; padding: 8px; background: #e5e7eb; color: #111; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;" onclick="rejectRide()">Decline</button>
-            </div>
-          </div>
-        </div>
-
-        <label style="margin-top: 20px;">Trip History</label>
-        <div class="history-list">
-          <div class="history-item">
-            <strong>Sarah Johnson</strong>
-            <p>📍 123 Main St → 456 Oak Ave</p>
-            <p>⭐ 5.0 | 💰 $18.50 | ⏱️ 12 min</p>
-          </div>
-          <div class="history-item">
-            <strong>Michael Chen</strong>
-            <p>📍 Downtown Center → Airport</p>
-            <p>⭐ 5.0 | 💰 $42.00 | ⏱️ 28 min</p>
-          </div>
-          <div class="history-item">
-            <strong>Emma Wilson</strong>
-            <p>📍 Park Plaza → Shopping District</p>
-            <p>⭐ 4.8 | 💰 $12.75 | ⏱️ 8 min</p>
-          </div>
-        </div>
-
-        <button class="primary-btn" onclick="endShift()">End Shift</button>
-      </div>
-    </main>
-  </div>
-
-  <!-- Navigation -->
-  <div style="position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: center; gap: 20px; padding: 12px; max-width: 520px; margin: 0 auto;">
-    <button onclick="goToPage('customer.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">👤</button>
-    <button onclick="goToPage('rider.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 1;">🚗</button>
-    <button onclick="goToPage('admin.html')" style="border: none; background: none; font-size: 24px; cursor: pointer; opacity: 0.5;">⚙️</button>
-  </div>
-
-  <script>
-    function setStatus(btn, status) {
-      document.querySelectorAll('.ride-option').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      const msgs = { online: '🟢 You are now online', break: '🟡 Break mode activated', offline: '⚫ You are now offline' };
-      showToast(msgs[status]);
-    }
-
-    function acceptRide() {
-      showToast('✅ Ride accepted! Heading to pickup...');
-      setTimeout(() => {
-        window.location.href = 'driver-tracking.html';
-      }, 1500);
-    }
-
-    function rejectRide() {
-      showToast('❌ Ride declined');
-    }
-
-    function endShift() {
-      if (confirm('Are you sure you want to end your shift?')) {
-        showToast('✋ Shift ended. See you tomorrow!');
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 1500);
-      }
-    }
-
-    function toggleDriverSettings() {
-      showToast('Settings: Language, Payment, Documents');
-    }
-
-    function goToPage(page) {
-      window.location.href = page;
-    }
-
-    function goHome() {
-      window.location.href = 'index.html';
-    }
-
-    function showToast(msg) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-  </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Driver</title>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
+<body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚙</div><div><p class="eyebrow">Driver</p><h1 id="welcome">Driver dashboard</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
+<main><div class="tabs"><button class="tab active" data-view="available">Available rides</button><button class="tab" data-view="active">Active ride</button><button class="tab" data-view="history">History</button></div>
+<section id="availableView"><div class="panel"><h2>Nearby requests</h2><div id="availableList"></div></div></section>
+<section id="activeView" class="hidden"><div class="panel"><div id="driverMap" class="map small"></div><div id="activeList"></div></div></section>
+<section id="historyView" class="hidden"><div class="panel"><h2>Completed rides</h2><div id="historyList"></div></div></section>
+</main><nav class="bottom-nav"><a class="active" href="rider.html"><span>🚙</span>Driver</a></nav></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script><script>
+const user=requireRole("driver");let map,layers=[];
+if(user){
+ document.getElementById("welcome").textContent=user.name;
+ document.getElementById("logoutBtn").addEventListener("click",logout);
+ document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>showView(btn.dataset.view)));
+ map=initLeafletMap("driverMap");
+ render();
+}
+function showView(view){
+ document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+ ["available","active","history"].forEach(v=>document.getElementById(v+"View").classList.toggle("hidden",v!==view));
+ if(view==="active"&&map)setTimeout(()=>map.invalidateSize(),80);render();
+}
+function driverActions(r){
+ if(r.status==="requested")return `<button class="btn primary" data-action="accept" data-id="${r.id}">Accept ride</button>`;
+ if(r.status==="accepted")return `<button class="btn primary" data-action="arrive" data-id="${r.id}">Arrived at pickup</button>`;
+ if(r.status==="arrived")return `<button class="btn primary" data-action="pickup" data-id="${r.id}">Pick up rider</button>`;
+ if(r.status==="picked_up")return `<button class="btn good" data-action="dropoff" data-id="${r.id}">Drop off & complete</button>`;
+ return "";
+}
+window.render=function(){
+ const db=getDB();
+ const available=db.rides.filter(r=>r.status==="requested"&&!r.driverId).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+ const active=db.rides.filter(r=>r.driverId===user.id&&!["completed","cancelled"].includes(r.status));
+ const past=db.rides.filter(r=>r.driverId===user.id&&r.status==="completed").sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+ document.getElementById("availableList").innerHTML=available.length?available.map(r=>rideCard(r,{actions:driverActions})).join(""):'<div class="empty">No open requests right now.</div>';
+ document.getElementById("activeList").innerHTML=active.length?active.map(r=>rideCard(r,{actions:driverActions})).join(""):'<div class="empty">No active ride.</div>';
+ document.getElementById("historyList").innerHTML=past.length?past.map(r=>rideCard(r)).join(""):'<div class="empty">No completed rides.</div>';
+ document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>advance(b.dataset.id,b.dataset.action)));
+ drawMap(active[0]);
+}
+function advance(id,action){
+ const db=getDB(),r=db.rides.find(x=>x.id===id);if(!r)return;
+ const ownedActive=db.rides.find(x=>x.driverId===user.id&&!["completed","cancelled"].includes(x.status)&&x.id!==id);
+ if(action==="accept"){if(ownedActive){toast("Complete your current ride first.");return}if(r.status!=="requested"||r.driverId){toast("Another driver accepted this ride.");render();return}r.driverId=user.id;r.status="accepted";}
+ else if(r.driverId!==user.id){toast("This ride is not assigned to you.");return}
+ else if(action==="arrive"&&r.status==="accepted")r.status="arrived";
+ else if(action==="pickup"&&r.status==="arrived")r.status="picked_up";
+ else if(action==="dropoff"&&r.status==="picked_up"){r.status="completed";r.completedAt=new Date().toISOString();}
+ else{toast("That step is not available yet.");return}
+ r.updatedAt=new Date().toISOString();saveDB(db);render();showView(r.status==="completed"?"history":"active");toast(statusLabel(r.status));
+}
+function drawMap(r){
+ if(!map)return;layers.forEach(l=>map.removeLayer(l));layers=[];
+ if(!r||r.pickupLat==null||r.destLat==null)return;
+ const p=[r.pickupLat,r.pickupLng],d=[r.destLat,r.destLng];
+ layers.push(L.marker(p).addTo(map).bindPopup("Pickup"),L.marker(d).addTo(map).bindPopup("Drop-off"),L.polyline([p,d],{weight:5}).addTo(map));
+ map.fitBounds(L.latLngBounds([p,d]),{padding:[35,35]});
+}
+</script></body></html>

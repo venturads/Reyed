@@ -1,181 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reyed - Customer</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <style>
-    #rideMap{height:280px;width:100%;border-radius:24px;margin-bottom:-32px;z-index:1;box-shadow:var(--shadow)}
-    .panel{z-index:2}
-    .map-help{position:absolute;z-index:500;left:28px;top:96px;background:rgba(255,255,255,.94);padding:8px 10px;border-radius:10px;font-size:.76rem;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,.12)}
-    .location-btn{position:absolute;z-index:500;right:28px;top:96px;border:0;background:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-    .app-shell main{position:relative}
-  </style>
-</head>
-<body>
-  <div class="app-shell">
-    <div class="topbar">
-      <div><p class="eyebrow">Reyed</p><h1>Request Ride</h1></div>
-      <div style="display:flex;gap:8px">
-        <button class="icon-btn" onclick="location.href='index.html'">🏠</button>
-        <button class="icon-btn" onclick="showToast('Profile coming soon')">👤</button>
-      </div>
-    </div>
-
-    <main>
-      <div class="map-help" id="mapHelp">Tap once for pickup, again for destination</div>
-      <button class="location-btn" type="button" onclick="useMyLocation()" aria-label="Use my location">◎</button>
-      <div id="rideMap" aria-label="Ride request map"></div>
-
-      <div class="panel">
-        <label for="pickup">📍 Pickup Location</label>
-        <div class="input-row"><input id="pickup" type="text" placeholder="Tap map or enter pickup address"></div>
-
-        <label for="destination">🚩 Destination</label>
-        <div class="input-row"><input id="destination" type="text" placeholder="Tap map or enter destination"></div>
-
-        <label for="price">💰 Offer Price</label>
-        <div class="input-row">
-          <span style="color:#6b7280;margin-right:8px;font-weight:600">$</span>
-          <input id="price" type="number" placeholder="Enter amount" value="12.50" min="2" step="0.25" style="border:0;outline:0;background:transparent;width:100%;padding:15px 10px;font-size:1rem">
-        </div>
-
-        <button class="primary-btn" onclick="requestRide()">Request Ride Now</button>
-        <button class="secondary-btn" onclick="resetMapSelection()">Reset Map Pins</button>
-      </div>
-    </main>
-  </div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script>
-    let map;
-    let pickupMarker = null;
-    let destinationMarker = null;
-    let routeLine = null;
-    let pickupCoords = null;
-    let destinationCoords = null;
-
-    function initMap() {
-      map = L.map('rideMap', { zoomControl: true }).setView([34.0522, -118.2437], 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-
-      map.on('click', async (event) => {
-        const coords = { lat: event.latlng.lat, lng: event.latlng.lng };
-        if (!pickupCoords) {
-          setPickup(coords);
-          document.getElementById('mapHelp').textContent = 'Now tap your destination';
-          document.getElementById('pickup').value = await labelFor(coords, 'Selected pickup');
-        } else if (!destinationCoords) {
-          setDestination(coords);
-          document.getElementById('mapHelp').textContent = 'Pickup and destination selected';
-          document.getElementById('destination').value = await labelFor(coords, 'Selected destination');
-        } else {
-          setDestination(coords);
-          document.getElementById('destination').value = await labelFor(coords, 'Selected destination');
-        }
-      });
-
-      setTimeout(() => map.invalidateSize(), 150);
-      useMyLocation(false);
-    }
-
-    function setPickup(coords) {
-      pickupCoords = coords;
-      if (pickupMarker) pickupMarker.setLatLng(coords);
-      else pickupMarker = L.marker(coords).addTo(map).bindPopup('Pickup');
-      redrawRoute();
-    }
-
-    function setDestination(coords) {
-      destinationCoords = coords;
-      if (destinationMarker) destinationMarker.setLatLng(coords);
-      else destinationMarker = L.marker(coords).addTo(map).bindPopup('Destination');
-      redrawRoute();
-    }
-
-    function redrawRoute() {
-      if (routeLine) map.removeLayer(routeLine);
-      if (pickupCoords && destinationCoords) {
-        routeLine = L.polyline([pickupCoords, destinationCoords], { weight: 5, opacity: 0.8 }).addTo(map);
-        map.fitBounds(routeLine.getBounds(), { padding: [35, 35] });
-      }
-    }
-
-    function useMyLocation(showErrors = true) {
-      if (!navigator.geolocation) {
-        if (showErrors) showToast('Location is not supported on this device');
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setPickup(coords);
-        map.setView(coords, 15);
-        document.getElementById('pickup').value = await labelFor(coords, 'My current location');
-        document.getElementById('mapHelp').textContent = 'Tap the map for your destination';
-      }, () => {
-        if (showErrors) showToast('Please allow location access in your browser');
-      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
-    }
-
-    async function labelFor(coords, fallback) {
-      try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(coords.lat)}&lon=${encodeURIComponent(coords.lng)}`;
-        const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
-        if (!response.ok) throw new Error('Reverse geocoding failed');
-        const data = await response.json();
-        return data.display_name || fallback;
-      } catch {
-        return `${fallback} (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`;
-      }
-    }
-
-    function resetMapSelection() {
-      if (pickupMarker) map.removeLayer(pickupMarker);
-      if (destinationMarker) map.removeLayer(destinationMarker);
-      if (routeLine) map.removeLayer(routeLine);
-      pickupMarker = destinationMarker = routeLine = null;
-      pickupCoords = destinationCoords = null;
-      document.getElementById('pickup').value = '';
-      document.getElementById('destination').value = '';
-      document.getElementById('mapHelp').textContent = 'Tap once for pickup, again for destination';
-    }
-
-    function requestRide() {
-      const pickup = document.getElementById('pickup').value.trim();
-      const destination = document.getElementById('destination').value.trim();
-      const price = Number(document.getElementById('price').value);
-
-      if (!pickup || !destination) return showToast('Please enter pickup and destination');
-      if (!Number.isFinite(price) || price < 2) return showToast('Minimum ride price is $2.00');
-
-      const rideData = {
-        pickup,
-        destination,
-        price: price.toFixed(2),
-        pickupCoords,
-        destinationCoords,
-        createdAt: new Date().toISOString(),
-        status: 'searching'
-      };
-      localStorage.setItem('rideRequest', JSON.stringify(rideData));
-      showToast('Searching for nearby drivers...');
-      setTimeout(() => location.href = 'tracking.html', 700);
-    }
-
-    function showToast(message) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = message;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2800);
-    }
-
-    window.addEventListener('load', initMap);
-  </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reyed Rider</title><link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
+<body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚘</div><div><p class="eyebrow">Rider</p><h1 id="welcome">Reyed</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
+<main>
+<div class="tabs"><button class="tab active" data-view="request">Request ride</button><button class="tab" data-view="ongoing">Ongoing ride</button><button class="tab" data-view="history">Past rides</button></div>
+<section id="requestView">
+<div class="panel"><div id="riderMap" class="map"></div><p class="map-help">Street names come from OpenStreetMap. Tap once for pickup, then again for drop-off, or use your location.</p>
+<div class="btn-row" style="margin-top:10px"><button class="btn secondary" id="locateBtn">📍 Use my location</button><button class="btn ghost" id="resetPins">Reset pins</button></div></div>
+<div class="panel"><div class="grid">
+<div><label for="pickup">Pickup address</label><input id="pickup" placeholder="Example: 123 Main Street"></div>
+<div><label for="destination">Drop-off address</label><input id="destination" placeholder="Example: Downtown Station"></div>
+<div><label for="offer">Your offer</label><input id="offer" type="number" min="2" step=".50" value="15"></div>
+<button class="btn primary full" id="requestBtn">Request ride</button>
+<a class="btn secondary full" style="text-decoration:none;text-align:center" href="https://www.paypal.com/" target="_blank" rel="noopener">Open payment site</a>
+</div></div></section>
+<section id="ongoingView" class="hidden"><div class="panel"><h2>Current ride</h2><div id="ongoingList"></div></div></section>
+<section id="historyView" class="hidden"><div class="panel"><h2>Past rides</h2><div id="historyList"></div></div></section>
+</main><nav class="bottom-nav"><a class="active" href="customer.html"><span>👤</span>Rider</a></nav></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script><script>
+const user=requireRole("rider");
+let map,pickupMarker,destMarker,routeLine,pickupCoord,destCoord;
+if(user){
+ document.getElementById("welcome").textContent=user.name;
+ document.getElementById("logoutBtn").addEventListener("click",logout);
+ document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>showView(btn.dataset.view)));
+ map=initLeafletMap("riderMap");
+ if(map) map.on("click",e=>{if(!pickupCoord)setPickup(e.latlng);else if(!destCoord)setDestination(e.latlng);else{setDestination(e.latlng)}});
+ document.getElementById("locateBtn").addEventListener("click",locate);
+ document.getElementById("resetPins").addEventListener("click",resetPins);
+ document.getElementById("requestBtn").addEventListener("click",requestRide);
+ render();
+}
+function showView(view){
+ document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+ ["request","ongoing","history"].forEach(v=>document.getElementById(v+"View").classList.toggle("hidden",v!==view));
+ if(view==="request"&&map)setTimeout(()=>map.invalidateSize(),80);
+ render();
+}
+function setPickup(latlng){
+ pickupCoord={lat:latlng.lat,lng:latlng.lng};
+ if(pickupMarker)pickupMarker.setLatLng(latlng);else pickupMarker=L.marker(latlng).addTo(map).bindPopup("Pickup");
+ pickupMarker.openPopup();drawLine();
+ document.getElementById("pickup").value=`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+}
+function setDestination(latlng){
+ destCoord={lat:latlng.lat,lng:latlng.lng};
+ if(destMarker)destMarker.setLatLng(latlng);else destMarker=L.marker(latlng).addTo(map).bindPopup("Drop-off");
+ destMarker.openPopup();drawLine();
+ document.getElementById("destination").value=`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+}
+function drawLine(){
+ if(routeLine)map.removeLayer(routeLine);
+ if(pickupCoord&&destCoord){routeLine=L.polyline([[pickupCoord.lat,pickupCoord.lng],[destCoord.lat,destCoord.lng]],{weight:5}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[35,35]});}
+}
+function resetPins(){
+ [pickupMarker,destMarker,routeLine].forEach(x=>{if(x&&map)map.removeLayer(x)});
+ pickupMarker=destMarker=routeLine=null;pickupCoord=destCoord=null;
+ document.getElementById("pickup").value="";document.getElementById("destination").value="";
+}
+function locate(){
+ if(!navigator.geolocation){toast("Location is not supported.");return}
+ navigator.geolocation.getCurrentPosition(pos=>{const ll={lat:pos.coords.latitude,lng:pos.coords.longitude};setPickup(ll);map.setView(ll,16)},()=>toast("Location permission was not available."),{enableHighAccuracy:true,timeout:10000});
+}
+function requestRide(){
+ const pickup=document.getElementById("pickup").value.trim(),destination=document.getElementById("destination").value.trim(),offer=Number(document.getElementById("offer").value);
+ if(!pickup||!destination){toast("Add pickup and drop-off.");return}
+ if(!offer||offer<2){toast("Offer must be at least $2.00.");return}
+ const active=getDB().rides.find(r=>r.riderId===user.id&&!["completed","cancelled"].includes(r.status));
+ if(active){toast("You already have an ongoing ride.");showView("ongoing");return}
+ const db=getDB();db.rides.push({id:uid("ride"),riderId:user.id,driverId:null,pickup,destination,
+ pickupLat:pickupCoord?.lat??null,pickupLng:pickupCoord?.lng??null,destLat:destCoord?.lat??null,destLng:destCoord?.lng??null,
+ offer,status:"requested",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});saveDB(db);toast("Ride requested.");showView("ongoing");
+}
+window.render=function(){
+ const rides=getDB().rides.filter(r=>r.riderId===user.id).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+ const ongoing=rides.filter(r=>!["completed","cancelled"].includes(r.status));
+ const past=rides.filter(r=>["completed","cancelled"].includes(r.status));
+ document.getElementById("ongoingList").innerHTML=ongoing.length?ongoing.map(r=>rideCard(r,{actions:r.status==="requested"?()=>`<button class="btn bad" data-cancel="${r.id}">Cancel request</button><a class="btn secondary" href="tracking.html?id=${encodeURIComponent(r.id)}">View tracking</a>`:()=>`<a class="btn primary" href="tracking.html?id=${encodeURIComponent(r.id)}">View live ride</a>`})).join(""):'<div class="empty">No ongoing ride.</div>';
+ document.getElementById("historyList").innerHTML=past.length?past.map(r=>rideCard(r)).join(""):'<div class="empty">No past rides yet.</div>';
+ document.querySelectorAll("[data-cancel]").forEach(b=>b.addEventListener("click",()=>cancelRide(b.dataset.cancel)));
+}
+function cancelRide(id){const db=getDB(),r=db.rides.find(x=>x.id===id&&x.riderId===user.id);if(r&&r.status==="requested"){r.status="cancelled";r.updatedAt=new Date().toISOString();saveDB(db);render();toast("Ride cancelled.")}}
+</script></body></html>
