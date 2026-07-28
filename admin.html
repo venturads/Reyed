@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Admin</title><link rel="stylesheet" href="./styles.css?v=5"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Admin</title><link rel="stylesheet" href="./styles.css?v=8"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">⚙️</div><div><p class="eyebrow">Administrator</p><h1>Reyed control center</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
 <main><div class="grid two">
 <div class="panel"><div class="small">Total rides</div><div class="money" id="totalRides">0</div></div>
@@ -9,7 +9,7 @@
 <div class="panel"><h2>All users</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Email</th></tr></thead><tbody id="userRows"></tbody></table></div></div>
 <div class="notice"><strong>Demo security note:</strong> this static GitHub Pages version separates screens and data by login in the browser, but true secure accounts across different phones require a backend such as Firebase or Supabase.</div>
 </main><nav class="bottom-nav"><a class="active" href="admin.html"><span>⚙️</span>Admin</a></nav></div>
-<script src="./app.js?v=5"></script><script>
+<script src="./google-sync-config.js?v=8"></script><script src="./google-sync.js?v=8"></script><script src="./app.js?v=8"></script><script>
 const user=requireRole("admin");
 if(user){
  document.getElementById("logoutBtn").addEventListener("click",logout);

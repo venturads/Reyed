@@ -111,3 +111,11 @@ select { -webkit-appearance: menulist; appearance: auto; }
 .map-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
 .map-dot.pickup{background:#1268e8}.map-dot.dropoff{background:#14804a}
 @media(max-width:480px){.ride-detail-grid{grid-template-columns:1fr}}
+
+.section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.section-heading h2{margin:0 0 4px}.btn:disabled{opacity:.55;cursor:not-allowed}.ride-card .btn-row{align-items:center}.ride-card .btn-row .btn{min-width:104px}@media(max-width:520px){.section-heading{align-items:stretch;flex-direction:column}.section-heading .btn{width:100%}.ride-card .btn-row .btn{flex:1}}
+
+/* Reyed v7 cloud sync */
+.cloud-status{position:fixed;left:50%;bottom:74px;transform:translateX(-50%);z-index:5000;padding:7px 12px;border-radius:999px;font-size:.75rem;font-weight:800;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);white-space:nowrap}
+.cloud-status.online{background:#e8fff1;color:#086b37;border-color:#a9e8c3}
+.cloud-status.connecting{background:#fff7dc;color:#7a5700;border-color:#f0d680}
+.cloud-status.offline,.cloud-status.error{background:#fff0f0;color:#9b2020;border-color:#efb0b0}

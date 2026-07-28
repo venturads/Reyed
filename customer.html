@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reyed Rider</title><link rel="stylesheet" href="./styles.css?v=5">
+<title>Reyed Rider</title><link rel="stylesheet" href="./styles.css?v=8">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚘</div><div><p class="eyebrow">Rider</p><h1 id="welcome">Reyed</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
 <main>
@@ -15,10 +15,10 @@
 <button class="btn primary full" id="requestBtn">Request ride</button>
 <a class="btn secondary full" style="text-decoration:none;text-align:center" href="https://www.paypal.com/" target="_blank" rel="noopener">Open payment site</a>
 </div></div></section>
-<section id="ongoingView" class="hidden"><div class="panel"><h2>Current ride</h2><div id="ongoingList"></div></div></section>
+<section id="ongoingView" class="hidden"><div class="panel"><div class="section-heading"><div><h2>Current ride</h2><p class="small">Driver assignment and ride progress update automatically.</p></div><button class="btn ghost" id="refreshCurrent">Refresh</button></div><div id="ongoingList"></div></div></section>
 <section id="historyView" class="hidden"><div class="panel"><h2>Past rides</h2><div id="historyList"></div></div></section>
 </main><nav class="bottom-nav"><a class="active" href="customer.html"><span>👤</span>Rider</a></nav></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./app.js?v=5"></script><script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./google-sync-config.js?v=8"></script><script src="./google-sync.js?v=8"></script><script src="./app.js?v=8"></script><script>
 const user=requireRole("rider");
 let map,pickupMarker,destMarker,routeLine,pickupCoord,destCoord;
 if(user){
@@ -30,6 +30,7 @@ if(user){
  document.getElementById("locateBtn").addEventListener("click",locate);
  document.getElementById("resetPins").addEventListener("click",resetPins);
  document.getElementById("requestBtn").addEventListener("click",requestRide);
+ document.getElementById("refreshCurrent").addEventListener("click",()=>{render();toast("Current ride refreshed.")});
  setupAutocomplete("pickup", setPickup);
  setupAutocomplete("destination", setDestination);
  document.addEventListener("click",e=>{if(!e.target.closest(".autocomplete-wrap"))document.querySelectorAll(".suggestions").forEach(x=>x.classList.add("hidden"))});
@@ -92,6 +93,13 @@ function setupAutocomplete(inputId,setter){
    },450);
  });
 }
+async function geocodeOne(query){
+ try{
+   const center=map?.getCenter();const viewbox=center?`&viewbox=${center.lng-0.5},${center.lat+0.35},${center.lng+0.5},${center.lat-0.35}&bounded=0`:"";
+   const res=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&q=${encodeURIComponent(query)}${viewbox}`,{headers:{"Accept":"application/json"}});
+   const items=await res.json();return items[0]?{lat:Number(items[0].lat),lng:Number(items[0].lon)}:null;
+ }catch(e){return null}
+}
 async function reverseGeocode(latlng){
  try{
    const url=`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${latlng.lat}&lon=${latlng.lng}`;
@@ -100,15 +108,21 @@ async function reverseGeocode(latlng){
  }catch(e){return ""}
 }
 
-function requestRide(){
+async function requestRide(){
  const pickup=document.getElementById("pickup").value.trim(),destination=document.getElementById("destination").value.trim(),offer=Number(document.getElementById("offer").value);
  if(!pickup||!destination){toast("Add pickup and drop-off.");return}
  if(!offer||offer<2){toast("Offer must be at least $2.00.");return}
  const active=getDB().rides.find(r=>r.riderId===user.id&&!["completed","cancelled"].includes(r.status));
  if(active){toast("You already have an ongoing ride.");showView("ongoing");return}
- const db=getDB();db.rides.push({id:uid("ride"),riderId:user.id,driverId:null,pickup,destination,
- pickupLat:pickupCoord?.lat??null,pickupLng:pickupCoord?.lng??null,destLat:destCoord?.lat??null,destLng:destCoord?.lng??null,
- offer,status:"requested",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});saveDB(db);toast("Ride requested.");showView("ongoing");
+ document.getElementById("requestBtn").disabled=true;
+ try{
+   if(!pickupCoord)pickupCoord=await geocodeOne(pickup);
+   if(!destCoord)destCoord=await geocodeOne(destination);
+   const db=getDB();db.rides.push({id:uid("ride"),riderId:user.id,driverId:null,pickup,destination,
+   pickupLat:pickupCoord?.lat??null,pickupLng:pickupCoord?.lng??null,destLat:destCoord?.lat??null,destLng:destCoord?.lng??null,
+   offer,status:"requested",deniedBy:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+   saveDB(db);toast("Ride requested and sent to available drivers.");showView("ongoing");
+ }finally{document.getElementById("requestBtn").disabled=false}
 }
 window.render=function(){
  const rides=getDB().rides.filter(r=>r.riderId===user.id).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));

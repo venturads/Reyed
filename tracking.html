@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Ride Tracking</title>
-<link rel="stylesheet" href="./styles.css?v=5"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
+<link rel="stylesheet" href="./styles.css?v=8"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🗺️</div><div><p class="eyebrow">Live ride</p><h1>Ride tracking</h1></div></div><button class="icon-btn" id="backBtn">Back</button></header>
 <main><div class="panel"><div id="trackingMap" class="map"></div></div><div class="panel" id="rideDetails"></div></main></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./app.js?v=5"></script><script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./google-sync-config.js?v=8"></script><script src="./google-sync.js?v=8"></script><script src="./app.js?v=8"></script><script>
 const user=currentUser();if(!user)location.href="index.html";
 const id=new URLSearchParams(location.search).get("id");let map,layers=[];
 if(user){

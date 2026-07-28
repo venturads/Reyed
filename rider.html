@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Driver</title>
-<link rel="stylesheet" href="./styles.css?v=5"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
+<link rel="stylesheet" href="./styles.css?v=8"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚙</div><div><p class="eyebrow">Driver</p><h1 id="welcome">Driver dashboard</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
 <main><div class="tabs"><button class="tab active" data-view="available">Available rides</button><button class="tab" data-view="active">Active ride</button><button class="tab" data-view="history">History</button></div>
-<section id="availableView"><div class="panel"><h2>Nearby requests</h2><div class="available-map-wrap"><div id="availableMap" class="map small"></div><div class="map-legend"><span><i class="map-dot pickup"></i>Pickup</span><span><i class="map-dot dropoff"></i>Drop-off</span></div></div><div id="availableList"></div></div></section>
+<section id="availableView"><div class="panel"><div class="section-heading"><div><h2>Available rides</h2><p class="small">Choose a request, review its map and details, then accept or deny it.</p></div><button class="btn ghost" id="refreshRides">Refresh</button></div><div class="available-map-wrap"><div id="availableMap" class="map small"></div><div class="map-legend"><span><i class="map-dot pickup"></i>Pickup</span><span><i class="map-dot dropoff"></i>Drop-off</span></div></div><div id="availableList"></div></div></section>
 <section id="activeView" class="hidden"><div class="panel"><div id="driverMap" class="map small"></div><div id="activeList"></div></div></section>
 <section id="historyView" class="hidden"><div class="panel"><h2>Completed rides</h2><div id="historyList"></div></div></section>
 </main><nav class="bottom-nav"><a class="active" href="rider.html"><span>🚙</span>Driver</a></nav></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./app.js?v=5"></script><script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./google-sync-config.js?v=8"></script><script src="./google-sync.js?v=8"></script><script src="./app.js?v=8"></script><script>
 const user=requireRole("driver");let map,availableMap,layers=[],availableLayers=[],selectedRideId=null,driverCoord=null;
 if(user){
  document.getElementById("welcome").textContent=user.name;
@@ -16,6 +16,7 @@ if(user){
  map=initLeafletMap("driverMap");
  availableMap=initLeafletMap("availableMap");
  locateDriver();
+ document.getElementById("refreshRides").addEventListener("click",()=>{render();toast("Ride list refreshed.")});
  render();
 }
 function showView(view){
@@ -26,7 +27,7 @@ function showView(view){
  render();
 }
 function driverActions(r){
- if(r.status==="requested")return `<button class="btn primary" data-action="accept" data-id="${r.id}">Accept ride</button>`;
+ if(r.status==="requested")return `<button class="btn primary" data-action="accept" data-id="${r.id}">Accept</button><button class="btn bad" data-action="deny" data-id="${r.id}">Deny</button>`;
  if(r.status==="accepted")return `<button class="btn primary" data-action="arrive" data-id="${r.id}">Arrived at pickup</button>`;
  if(r.status==="arrived")return `<button class="btn primary" data-action="pickup" data-id="${r.id}">Pick up rider</button>`;
  if(r.status==="picked_up")return `<button class="btn good" data-action="dropoff" data-id="${r.id}">Drop off & complete</button>`;
@@ -34,7 +35,7 @@ function driverActions(r){
 }
 window.render=function(){
  const db=getDB();
- const available=db.rides.filter(r=>r.status==="requested"&&!r.driverId).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+ const available=db.rides.filter(r=>r.status==="requested"&&!r.driverId&&!(r.deniedBy||[]).includes(user.id)).sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
  const active=db.rides.filter(r=>r.driverId===user.id&&!["completed","cancelled"].includes(r.status));
  const past=db.rides.filter(r=>r.driverId===user.id&&r.status==="completed").sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
  document.getElementById("availableList").innerHTML=available.length?available.map(r=>{
@@ -51,6 +52,11 @@ window.render=function(){
 function advance(id,action){
  const db=getDB(),r=db.rides.find(x=>x.id===id);if(!r)return;
  const ownedActive=db.rides.find(x=>x.driverId===user.id&&!["completed","cancelled"].includes(x.status)&&x.id!==id);
+ if(action==="deny"){
+   r.deniedBy=Array.isArray(r.deniedBy)?r.deniedBy:[];
+   if(!r.deniedBy.includes(user.id))r.deniedBy.push(user.id);
+   r.updatedAt=new Date().toISOString();saveDB(db);selectedRideId=null;render();toast("Ride removed from your available list.");return;
+ }
  if(action==="accept"){if(ownedActive){toast("Complete your current ride first.");return}if(r.status!=="requested"||r.driverId){toast("Another driver accepted this ride.");render();return}r.driverId=user.id;r.status="accepted";}
  else if(r.driverId!==user.id){toast("This ride is not assigned to you.");return}
  else if(action==="arrive"&&r.status==="accepted")r.status="arrived";

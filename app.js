@@ -1,5 +1,5 @@
-const DB_KEY = "reyed_demo_db_v5";
-const SESSION_KEY = "reyed_session_v5";
+const DB_KEY = "reyed_demo_db_v8";
+const SESSION_KEY = "reyed_session_v8";
 
 const STATUS_LABELS = {
   requested:"Requested",
@@ -21,7 +21,7 @@ function defaultDB(){
       {id:"admin-1",role:"admin",name:"Reyed Admin",email:"admin@reyed.demo",password:"admin123"}
     ],
     rides:[
-      {id:"ride-demo-open",riderId:"rider-2",driverId:null,pickup:"Starbucks, 639 N Broadway, Los Angeles, CA",destination:"Union Station, 800 N Alameda St, Los Angeles, CA",pickupLat:34.0588,pickupLng:-118.2467,destLat:34.0562,destLng:-118.2365,offer:16.50,status:"requested",createdAt:"2026-07-27T20:30:00.000Z",updatedAt:"2026-07-27T20:30:00.000Z"},
+      {id:"ride-demo-open",riderId:"rider-2",driverId:null,pickup:"Starbucks, 639 N Broadway, Los Angeles, CA",destination:"Union Station, 800 N Alameda St, Los Angeles, CA",pickupLat:34.0588,pickupLng:-118.2467,destLat:34.0562,destLng:-118.2365,offer:16.50,status:"requested",deniedBy:[],createdAt:"2026-07-27T20:30:00.000Z",updatedAt:"2026-07-27T20:30:00.000Z"},
       {id:"ride-demo-1",riderId:"rider-1",driverId:"driver-1",pickup:"Union Station, Los Angeles",destination:"Crypto.com Arena, Los Angeles",pickupLat:34.0562,pickupLng:-118.2365,destLat:34.0430,destLng:-118.2673,offer:18,status:"completed",createdAt:"2026-07-22T18:20:00.000Z",updatedAt:"2026-07-22T19:00:00.000Z",completedAt:"2026-07-22T19:00:00.000Z"}
     ]
   };
@@ -33,7 +33,13 @@ function getDB(){
   }catch(e){}
   const db=defaultDB(); saveDB(db); return db;
 }
-function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));}
+function saveDB(db, options={}){
+  localStorage.setItem(DB_KEY,JSON.stringify(db));
+  try{new BroadcastChannel("reyed-rides-v8").postMessage({type:"db-updated",at:Date.now()})}catch(e){}
+  if(!options.skipCloud && typeof window.reyedCloudSave === "function"){
+    window.reyedCloudSave(db).catch(err=>console.warn("Cloud save failed",err));
+  }
+}
 function getSession(){
   try{return JSON.parse(sessionStorage.getItem(SESSION_KEY));}catch(e){return null}
 }
@@ -58,6 +64,10 @@ function toast(message){
   setTimeout(()=>el.remove(),2600);
 }
 function getUser(id){return getDB().users.find(u=>u.id===id)}
+function rideMiles(ride){
+  if([ride.pickupLat,ride.pickupLng,ride.destLat,ride.destLng].some(v=>v==null))return null;
+  return haversineMiles({lat:ride.pickupLat,lng:ride.pickupLng},{lat:ride.destLat,lng:ride.destLng});
+}
 function statusBadge(status){return `<span class="status ${status}">${statusLabel(status)}</span>`}
 function rideProgress(status){
   const current=STATUS_ORDER.indexOf(status);
@@ -79,6 +89,8 @@ function rideCard(ride,options={}){
       <div><span class="small">Driver</span><strong>${escapeHTML(driver?.name||"Not assigned")}</strong></div>
       <div><span class="small">Requested</span><strong>${dateText(ride.createdAt)}</strong></div>
       <div><span class="small">Ride ID</span><strong>#${escapeHTML(ride.id.slice(-7))}</strong></div>
+      <div><span class="small">Trip distance</span><strong>${rideMiles(ride)==null?"Not calculated":rideMiles(ride).toFixed(1)+" mi"}</strong></div>
+      <div><span class="small">Vehicle</span><strong>${escapeHTML(driver?.vehicle||"Waiting for driver")}</strong></div>
     </div>
     ${ride.completedAt?`<div class="small ride-completed-time">Completed ${dateText(ride.completedAt)}</div>`:""}
     ${actions?`<div class="btn-row" style="margin-top:12px">${actions}</div>`:""}
@@ -102,3 +114,24 @@ function initLeafletMap(id,center=[34.0522,-118.2437],zoom=13){
   return map;
 }
 window.addEventListener("storage",()=>{if(typeof window.render==="function")window.render();});
+try{
+  const syncChannel=new BroadcastChannel("reyed-rides-v8");
+  syncChannel.onmessage=()=>{if(typeof window.render==="function")window.render()};
+}catch(e){}
+window.addEventListener("reyed-cloud-db",event=>{
+  if(event.detail && event.detail.users && event.detail.rides){
+    saveDB(event.detail,{skipCloud:true});
+    if(typeof window.render==="function")window.render();
+  }
+});
+window.addEventListener("reyed-cloud-status",event=>{
+  let el=document.getElementById("cloudStatus");
+  if(!el){
+    el=document.createElement("div");el.id="cloudStatus";el.className="cloud-status";
+    document.body.appendChild(el);
+  }
+  const state=event.detail?.state||"offline";
+  el.className="cloud-status "+state;
+  el.textContent=event.detail?.message||"Cloud status unavailable";
+});
+setInterval(()=>{if(typeof window.render==="function" && !document.hidden)window.render()},2000);
