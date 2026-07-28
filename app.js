@@ -1,5 +1,5 @@
-const DB_KEY = "reyed_demo_db_v8";
-const SESSION_KEY = "reyed_session_v8";
+const DB_KEY = "reyed_demo_db_v9";
+const SESSION_KEY = "reyed_session_v9";
 
 const STATUS_LABELS = {
   requested:"Requested",
@@ -13,6 +13,7 @@ const STATUS_ORDER = ["requested","accepted","arrived","picked_up","completed"];
 
 function defaultDB(){
   return {
+    settings:{appName:"Reyed",announcement:"",externalLinkLabel:"Open ride link",externalLinkUrl:"https://example.com",supportPhone:"",supportEmail:"",allowNewRides:true},
     users:[
       {id:"rider-1",role:"rider",name:"Jordan Rider",email:"rider@reyed.demo",password:"rider123"},
       {id:"rider-2",role:"rider",name:"Taylor Rider",email:"taylor@reyed.demo",password:"rider123"},
@@ -29,13 +30,13 @@ function defaultDB(){
 function getDB(){
   try{
     const value=JSON.parse(localStorage.getItem(DB_KEY));
-    if(value && Array.isArray(value.users) && Array.isArray(value.rides)) return value;
+    if(value && Array.isArray(value.users) && Array.isArray(value.rides)){ value.settings=value.settings||defaultDB().settings; return value; }
   }catch(e){}
   const db=defaultDB(); saveDB(db); return db;
 }
 function saveDB(db, options={}){
   localStorage.setItem(DB_KEY,JSON.stringify(db));
-  try{new BroadcastChannel("reyed-rides-v8").postMessage({type:"db-updated",at:Date.now()})}catch(e){}
+  try{new BroadcastChannel("reyed-rides-v9").postMessage({type:"db-updated",at:Date.now()})}catch(e){}
   if(!options.skipCloud && typeof window.reyedCloudSave === "function"){
     window.reyedCloudSave(db).catch(err=>console.warn("Cloud save failed",err));
   }
@@ -115,7 +116,7 @@ function initLeafletMap(id,center=[34.0522,-118.2437],zoom=13){
 }
 window.addEventListener("storage",()=>{if(typeof window.render==="function")window.render();});
 try{
-  const syncChannel=new BroadcastChannel("reyed-rides-v8");
+  const syncChannel=new BroadcastChannel("reyed-rides-v9");
   syncChannel.onmessage=()=>{if(typeof window.render==="function")window.render()};
 }catch(e){}
 window.addEventListener("reyed-cloud-db",event=>{

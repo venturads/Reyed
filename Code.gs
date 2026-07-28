@@ -62,7 +62,7 @@ function mergeDatabase_(oldDb, newDb) {
     var newTime = Date.parse(r.updatedAt || r.createdAt || 0) || 0;
     if(!old || newTime >= oldTime) ridesById[r.id]=r;
   });
-  return {users:Object.keys(usersById).map(function(k){return usersById[k];}), rides:Object.keys(ridesById).map(function(k){return ridesById[k];})};
+  return {settings:newDb.settings || oldDb.settings || {}, users:Object.keys(usersById).map(function(k){return usersById[k];}), rides:Object.keys(ridesById).map(function(k){return ridesById[k];})};
 }
 
 function safeRoom_(value) {

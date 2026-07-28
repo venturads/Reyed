@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reyed Driver</title>
-<link rel="stylesheet" href="./styles.css?v=8"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
+<link rel="stylesheet" href="./styles.css?v=9"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚙</div><div><p class="eyebrow">Driver</p><h1 id="welcome">Driver dashboard</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
 <main><div class="tabs"><button class="tab active" data-view="available">Available rides</button><button class="tab" data-view="active">Active ride</button><button class="tab" data-view="history">History</button></div>
 <section id="availableView"><div class="panel"><div class="section-heading"><div><h2>Available rides</h2><p class="small">Choose a request, review its map and details, then accept or deny it.</p></div><button class="btn ghost" id="refreshRides">Refresh</button></div><div class="available-map-wrap"><div id="availableMap" class="map small"></div><div class="map-legend"><span><i class="map-dot pickup"></i>Pickup</span><span><i class="map-dot dropoff"></i>Drop-off</span></div></div><div id="availableList"></div></div></section>
 <section id="activeView" class="hidden"><div class="panel"><div id="driverMap" class="map small"></div><div id="activeList"></div></div></section>
 <section id="historyView" class="hidden"><div class="panel"><h2>Completed rides</h2><div id="historyList"></div></div></section>
 </main><nav class="bottom-nav"><a class="active" href="rider.html"><span>🚙</span>Driver</a></nav></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./google-sync-config.js?v=8"></script><script src="./google-sync.js?v=8"></script><script src="./app.js?v=8"></script><script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./google-sync-config.js?v=9"></script><script src="./google-sync.js?v=9"></script><script src="./app.js?v=9"></script><script>
 const user=requireRole("driver");let map,availableMap,layers=[],availableLayers=[],selectedRideId=null,driverCoord=null;
 if(user){
  document.getElementById("welcome").textContent=user.name;

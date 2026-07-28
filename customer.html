@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reyed Rider</title><link rel="stylesheet" href="./styles.css?v=8">
+<title>Reyed Rider</title><link rel="stylesheet" href="./styles.css?v=9">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></head>
 <body><div class="app-shell"><header class="topbar"><div class="brand"><div class="logo">🚘</div><div><p class="eyebrow">Rider</p><h1 id="welcome">Reyed</h1></div></div><button class="icon-btn" id="logoutBtn">Sign out</button></header>
 <main>
@@ -13,12 +13,12 @@
 <div class="autocomplete-wrap"><label for="destination">Drop-off address or business</label><input id="destination" autocomplete="off" placeholder="Search a business, landmark, or street"><div id="destinationStatus" class="search-status"></div><div id="destinationSuggestions" class="suggestions hidden"></div></div>
 <div><label for="offer">Your offer</label><input id="offer" type="number" min="2" step=".50" value="15"></div>
 <button class="btn primary full" id="requestBtn">Request ride</button>
-<a class="btn secondary full" style="text-decoration:none;text-align:center" href="https://www.paypal.com/" target="_blank" rel="noopener">Open payment site</a>
+<div id="announcementBox" class="notice hidden"></div><a id="externalLinkBtn" class="btn secondary full hidden" style="text-decoration:none;text-align:center" target="_blank" rel="noopener"></a>
 </div></div></section>
 <section id="ongoingView" class="hidden"><div class="panel"><div class="section-heading"><div><h2>Current ride</h2><p class="small">Driver assignment and ride progress update automatically.</p></div><button class="btn ghost" id="refreshCurrent">Refresh</button></div><div id="ongoingList"></div></div></section>
 <section id="historyView" class="hidden"><div class="panel"><h2>Past rides</h2><div id="historyList"></div></div></section>
 </main><nav class="bottom-nav"><a class="active" href="customer.html"><span>👤</span>Rider</a></nav></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./google-sync-config.js?v=8"></script><script src="./google-sync.js?v=8"></script><script src="./app.js?v=8"></script><script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="./google-sync-config.js?v=9"></script><script src="./google-sync.js?v=9"></script><script src="./app.js?v=9"></script><script>
 const user=requireRole("rider");
 let map,pickupMarker,destMarker,routeLine,pickupCoord,destCoord;
 if(user){
@@ -34,7 +34,7 @@ if(user){
  setupAutocomplete("pickup", setPickup);
  setupAutocomplete("destination", setDestination);
  document.addEventListener("click",e=>{if(!e.target.closest(".autocomplete-wrap"))document.querySelectorAll(".suggestions").forEach(x=>x.classList.add("hidden"))});
- render();
+ applyAdminSettings(); render();
 }
 function showView(view){
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
@@ -108,7 +108,9 @@ async function reverseGeocode(latlng){
  }catch(e){return ""}
 }
 
+function applyAdminSettings(){const s=getDB().settings||defaultDB().settings;document.title=(s.appName||"Reyed")+" Rider";document.getElementById("welcome").textContent=user.name;const a=document.getElementById("announcementBox");a.textContent=s.announcement||"";a.classList.toggle("hidden",!s.announcement);const b=document.getElementById("externalLinkBtn");b.textContent=s.externalLinkLabel||"Open ride link";b.href=s.externalLinkUrl||"#";b.classList.toggle("hidden",!s.externalLinkUrl);document.getElementById("requestBtn").disabled=s.allowNewRides===false;}
 async function requestRide(){
+ const settings=getDB().settings||defaultDB().settings;if(settings.allowNewRides===false){toast("New ride requests are paused by admin.");return}
  const pickup=document.getElementById("pickup").value.trim(),destination=document.getElementById("destination").value.trim(),offer=Number(document.getElementById("offer").value);
  if(!pickup||!destination){toast("Add pickup and drop-off.");return}
  if(!offer||offer<2){toast("Offer must be at least $2.00.");return}

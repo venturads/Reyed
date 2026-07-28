@@ -1,17 +1,16 @@
-# Reyed v8 — two phones without Firebase
+# Reyed v9 — Admin-controlled two-phone demo
 
-Upload the website files to GitHub Pages. Follow `SETUP-GOOGLE-SYNC.md` to deploy the included `Code.gs` as a Google Apps Script Web App.
+No payment processing is included. The admin can set one external button/link shown on the rider page.
 
-Features:
-- Shared ride requests between two phones
-- Driver Available Rides with Accept and Deny
-- Driver map and full ride details
-- Arrived, Picked Up, and Dropped Off progression
-- Rider current ride and detailed past rides
-- Admin ride access
-- Local demo fallback when no Google endpoint is configured
+Admin controls:
+- app name and announcement
+- external link label and URL
+- support contact information
+- pause/resume new ride requests
+- create, edit, assign, change status, or delete rides
+- create, edit, change role/password, or delete users
+- edit pickup, drop-off, driver, rider, and display offer
 
-Demo accounts:
-- Rider: rider@reyed.demo / rider123
-- Driver: driver@reyed.demo / driver123
-- Admin: admin@reyed.demo / admin123
+Use the same Google Apps Script setup from `SETUP-GOOGLE-SYNC.md`. Replace the deployed Apps Script code with the included `Code.gs`, redeploy, and paste the `/exec` URL into `google-sync-config.js`.
+
+Admin login: admin@reyed.demo / admin123
